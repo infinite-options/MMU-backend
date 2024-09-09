@@ -10,22 +10,22 @@ import os
 import ast
 
 # get new id (primary key)
-def get_new_unique_id(table, col):
-    print(' in get ne unique id')
-    with connect() as db:
-        query = f'''SELECT {col} FROM {table} ORDER BY user_uid DESC LIMIT 1;'''
-        response = db.execute(query)
+# def get_new_unique_id(table, col):
+#     print(' in get ne unique id')
+#     with connect() as db:
+#         query = f'''SELECT {col} FROM {table} ORDER BY user_uid DESC LIMIT 1;'''
+#         response = db.execute(query)
 
-    last_unique_id = response['result'][0][col]
+#     last_unique_id = response['result'][0][col]
 
-    if last_unique_id:
-        last_id = last_unique_id
-        id_list = last_id.split('-')
-        last_int = int(id_list[1])
-        new_int = last_int + 1
-        new_unique_id = "{}-{:06d}".format(id_list[0], new_int)
+#     if last_unique_id:
+#         last_id = last_unique_id
+#         id_list = last_id.split('-')
+#         last_int = int(id_list[1])
+#         new_int = last_int + 1
+#         new_unique_id = "{}-{:06d}".format(id_list[0], new_int)
     
-    return new_unique_id
+#     return new_unique_id
 
 class UserInfo(Resource):
     
@@ -50,11 +50,12 @@ class UserInfo(Resource):
         try:
             with connect() as db:
                 new_user_uid = db.call(procedure='new_user_uid')
+                print(new_user_uid)
                 payload = request.form.to_dict()
-                payload['user_uid'] = new_user_uid
+                payload['user_uid'] = new_user_uid['result'][0]['new_id']
                 print(payload)
                 parameter = {'user_email_id': payload['user_email_id']}
-                email_exists = db.select('users', parameter)
+                email_exists = db.select('users', where=parameter)
                 
                 if email_exists['result']:
                     return make_response(jsonify({

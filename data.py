@@ -600,23 +600,23 @@ class DatabaseConnection:
                     
 
                 if 'get' in cmd:
-                    # print('IN GET')
+                    print('IN GET')
                     result = cur.fetchall()
                     # print("After result: ", result, type(result))
                     result = serializeJSON(result)
                     # print("After serialization: ", result)
-                    # print('RESULT GET')
+                    print('RESULT GET')
                     response['message'] = 'Successfully executed SQL query'
                     response['code'] = 200
                     response['result'] = result
-                    # print('RESPONSE GET')
+                    print('RESPONSE GET')
                 elif 'post' in cmd:
-                    # print('IN POST')
+                    print('IN POST')
                     self.conn.commit()
                     response['message'] = 'Successfully committed SQL query'
                     response['code'] = 200
                     response['change'] = str(cur.rowcount) + " rows affected"
-                    # print('RESPONSE POST')
+                    print('RESPONSE POST')
 
         except pymysql.MySQLError as e:
             message = str(e)
