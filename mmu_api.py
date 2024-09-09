@@ -13,6 +13,7 @@
 # SECTION 1:  IMPORT FILES AND FUNCTIONS
 # from users import UserInfo
 from lists import List
+from user import UserInfo
 from data import connect, disconnect, uploadImage, s3
 
 import os
@@ -37,7 +38,7 @@ import pytz
 from dotenv import load_dotenv
 # from datetime import datetime as dt
 # from datetime import timezone as dtz
-# from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta
 from flask import Flask, request, render_template, url_for, redirect
 from flask_restful import Resource, Api
 from flask_cors import CORS
@@ -1801,6 +1802,7 @@ api.add_resource(List, '/lists')
 api.add_resource(stripe_key, "/stripe_key/<string:desc>")
 api.add_resource(SendEmail_CLASS, "/sendEmail_CLASS")
 api.add_resource(SendEmail, "/sendEmail")
+api.add_resource(UserInfo, "/userinfo", "/userinfo/<user_id>")
 
 
 if __name__ == '__main__':

@@ -569,7 +569,6 @@ def serializeJSON(unserialized):
         # print("in else")
         return unserialized
 
-
 class DatabaseConnection:
     def __init__(self, conn):
         self.conn = conn
@@ -584,9 +583,9 @@ class DatabaseConnection:
         self.disconnect()
 
     def execute(self, sql, args=[], cmd='get'):
-        # print("In execute.  SQL: ", sql)
-        # print("In execute.  args: ",args)
-        # print("In execute.  cmd: ",cmd)
+        print("In execute.  SQL: ", sql)
+        print("In execute.  args: ",args)
+        print("In execute.  cmd: ",cmd)
         response = {}
         try:
             with self.conn.cursor() as cur:
@@ -606,18 +605,18 @@ class DatabaseConnection:
                     # print("After result: ", result, type(result))
                     result = serializeJSON(result)
                     # print("After serialization: ", result)
-                    # print('RESULT GET')
+                    print('RESULT GET')
                     response['message'] = 'Successfully executed SQL query'
                     response['code'] = 200
                     response['result'] = result
-                    # print('RESPONSE GET')
+                    print('RESPONSE GET')
                 elif 'post' in cmd:
                     # print('IN POST')
                     self.conn.commit()
                     response['message'] = 'Successfully committed SQL query'
                     response['code'] = 200
                     response['change'] = str(cur.rowcount) + " rows affected"
-                    # print('RESPONSE POST')
+                    print('RESPONSE POST')
         except Exception as e:
             print('ERROR', e)
             response['message'] = 'Error occurred while executing SQL query'
@@ -629,6 +628,7 @@ class DatabaseConnection:
     def select(self, tables, where={}, cols='*', exact_match = True, limit = None):
         response = {}
         try:
+            print("In Select")
             sql = f'SELECT {cols} FROM {tables}'
             # print(sql)
             for i, key in enumerate(where.keys()):
