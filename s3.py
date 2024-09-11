@@ -179,15 +179,15 @@ def processImage(key, payload):
         if images != []:
             current_images.extend(images)
             
-        try:
-            file = request.files.get('user_video')
-            if file:
-                unique_filename = f"{key_uid}" + "_" + datetime.datetime.utcnow().strftime('%Y%m%d%H%M%SZ')
-                image_key = f'{key_type}/{key_uid}/videos/{unique_filename}'
+        # try:
+        #     file = request.files.get('user_video')
+        #     if file:
+        #         unique_filename = f"{key_uid}" + "_" + datetime.datetime.utcnow().strftime('%Y%m%d%H%M%SZ')
+        #         image_key = f'{key_type}/{key_uid}/videos/{unique_filename}'
 
-                video = uploadImage(file, image_key, '')
-        except Exception as e:
-            return (e)
+        #         video = uploadImage(file, image_key, '')
+        # except Exception as e:
+        #     return (e)
 
         # Delete Images
         # if payload_delete_images:
@@ -216,7 +216,7 @@ def processImage(key, payload):
         # print("\n\nCurrent Images in Function: ", current_images, type(current_images))
 
         if key_type == 'users': payload['user_photo_url'] = json.dumps(current_images) 
-        payload['user_video_url'] = json.dumps(video) 
+        # payload['user_video_url'] = json.dumps(video) 
         # payload.pop('user_favorite_image')
 
         print("\n\nPayload before return: ", payload)
