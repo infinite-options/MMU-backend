@@ -14,7 +14,9 @@
 # from users import UserInfo
 from lists import List
 from user import UserInfo
-from data import connect, disconnect, uploadImage, s3
+from matches import Match
+from data import connect, disconnect
+from s3 import uploadImage, s3
 
 import os
 import boto3
@@ -1803,6 +1805,7 @@ api.add_resource(stripe_key, "/stripe_key/<string:desc>")
 api.add_resource(SendEmail_CLASS, "/sendEmail_CLASS")
 api.add_resource(SendEmail, "/sendEmail")
 api.add_resource(UserInfo, "/userinfo", "/userinfo/<user_id>")
+api.add_resource(Match, "/matches")
 
 
 if __name__ == '__main__':

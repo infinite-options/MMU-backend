@@ -23,8 +23,8 @@ def updateImages(imageFiles, property_uid):
     
         if type(imageFiles[filename]) == str:
     
-            bucket = 'io-pm'
-            key = imageFiles[filename].split('/io-pm/')[1]
+            bucket = 'io-mmu'
+            key = imageFiles[filename].split('/io-mmu/')[1]
             data = s3.get_object(
                 Bucket=bucket,
                 Key=key
@@ -37,7 +37,7 @@ def updateImages(imageFiles, property_uid):
     
     
     s3Resource = boto3.resource('s3')
-    bucket = s3Resource.Bucket('io-pm')
+    bucket = s3Resource.Bucket('io-mmu')
     bucket.objects.filter(Prefix=f'properties/{property_uid}/').delete()
     images = []
     for i in range(len(imageFiles.keys())):

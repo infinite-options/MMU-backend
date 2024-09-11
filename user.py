@@ -4,28 +4,11 @@ from werkzeug.exceptions import BadRequest
 from werkzeug.utils import secure_filename
 
 
-from data import connect, uploadImage, s3
+from data import connect
+from s3 import uploadImage, s3, processImage
 import json
 import os
 import ast
-
-# get new id (primary key)
-# def get_new_unique_id(table, col):
-#     print(' in get ne unique id')
-#     with connect() as db:
-#         query = f'''SELECT {col} FROM {table} ORDER BY user_uid DESC LIMIT 1;'''
-#         response = db.execute(query)
-
-#     last_unique_id = response['result'][0][col]
-
-#     if last_unique_id:
-#         last_id = last_unique_id
-#         id_list = last_id.split('-')
-#         last_int = int(id_list[1])
-#         new_int = last_int + 1
-#         new_unique_id = "{}-{:06d}".format(id_list[0], new_int)
-    
-#     return new_unique_id
 
 class UserInfo(Resource):
     
@@ -34,8 +17,6 @@ class UserInfo(Resource):
 
         with connect() as db:
             userQuery = db.select('users', {'user_uid': user_id})
-            # userQuery = db.execute('''
-            #                     SELECT * FROM mmu.users''')
 
         if userQuery['code'] == 200 and int(len(userQuery['result']) > 0):                
             return userQuery
@@ -44,8 +25,6 @@ class UserInfo(Resource):
     
     def post(self):
         print("In UserInfo POST")
-
-        # new_user_uid = get_new_unique_id('users', 'user_uid')
         
         try:
             with connect() as db:
@@ -65,6 +44,7 @@ class UserInfo(Resource):
                     }), 409)
 
                 userQuery = db.insert('users', payload)
+                userQuery['user_uid'] = new_user_uid['result'][0]['new_id']
             
             return userQuery
         
@@ -78,8 +58,8 @@ class UserInfo(Resource):
             payload = request.form.to_dict()
             user_uid = payload.pop('user_uid')
             key = {'user_uid': user_uid}
+
             email = db.select('users', key, cols='user_email_id')
-            print(email)
             if email['result'][0]['user_email_id'] != payload['user_email_id']:
                 return make_response(jsonify({
                         'code': 400,
@@ -88,7 +68,9 @@ class UserInfo(Resource):
                     }), 400)
 
 
-            key = {'user_uid': user_uid}
+            # Process Images
+            processImage(key, payload)
             userQuery = db.update('users', key, payload)
         
+        # return userQuery
         return userQuery
