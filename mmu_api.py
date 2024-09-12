@@ -1805,7 +1805,7 @@ api.add_resource(stripe_key, "/stripe_key/<string:desc>")
 api.add_resource(SendEmail_CLASS, "/sendEmail_CLASS")
 api.add_resource(SendEmail, "/sendEmail")
 api.add_resource(UserInfo, "/userinfo", "/userinfo/<user_id>")
-api.add_resource(Match, "/matches")
+api.add_resource(Match, "/matches/<user_uid>")
 
 
 if __name__ == '__main__':

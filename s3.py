@@ -75,6 +75,7 @@ def uploadImage(file, key, content):
             Bucket=bucket,
             Body=file_content,
             Key=key,
+            ACL='public-read',
             ContentType=contentType
         )
         print("After Upload: ", upload_file)
@@ -102,7 +103,7 @@ def processImage(key, payload):
             payload_delete_images = payload.pop('delete_images', None)  # Images to Delete
 
             #  GET images sent by Frontend. (img_0, img_1, ..)
-            if 'img_0' in request.files or payload_delete_images != None: 
+            if 'img_0' in request.files or 'user_video' in request.files or payload_delete_images != None: 
                 # Current Images in the database  
                 payload_query = db.execute(""" SELECT user_photo_url FROM mmu.users WHERE user_uid = \'""" + key_uid + """\'; """)     
                 
@@ -134,6 +135,7 @@ def processImage(key, payload):
         images = []
         i = 0
         imageFiles = {}
+        video_count = 0
 
         print("\n\n\n--------------About to Add Images--------------\n\n\n")
 
@@ -144,6 +146,8 @@ def processImage(key, payload):
 
             file = request.files.get(filename)
             # print("\n\nFile:" , file)        
+
+            video_file = request.files.get('user_video')
 
             s3Link = payload.get(filename) # Used for fav images
             # print("\n\nS3Link: ", s3Link)
@@ -171,6 +175,12 @@ def processImage(key, payload):
                 if filename == payload_fav_images:
                     if key_type == 'user_uid': payload["user_favorite_photo"] = image
             
+            elif video_file and video_count == 0:
+                unique_filename = f"{key_uid}" + "_" + datetime.datetime.utcnow().strftime('%Y%m%d%H%M%SZ')
+                image_key = f'{key_type}/{key_uid}/videos/{unique_filename}'
+
+                video = uploadImage(video_file, image_key, '')
+                video_count += 1
             else:
                 break
             i += 1
@@ -216,7 +226,7 @@ def processImage(key, payload):
         # print("\n\nCurrent Images in Function: ", current_images, type(current_images))
 
         if key_type == 'users': payload['user_photo_url'] = json.dumps(current_images) 
-        # payload['user_video_url'] = json.dumps(video) 
+        payload['user_video_url'] = json.dumps(video) 
         # payload.pop('user_favorite_image')
 
         print("\n\nPayload before return: ", payload)
