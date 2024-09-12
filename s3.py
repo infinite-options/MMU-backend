@@ -75,6 +75,7 @@ def uploadImage(file, key, content):
             Bucket=bucket,
             Body=file_content,
             Key=key,
+            ACL='public-read',
             ContentType=contentType
         )
         print("After Upload: ", upload_file)
