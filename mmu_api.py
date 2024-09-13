@@ -15,6 +15,7 @@
 from lists import List
 from user import UserInfo
 from matches import Match
+from meet import Meet
 from data import connect, disconnect
 from s3 import uploadImage, s3
 
@@ -1806,6 +1807,7 @@ api.add_resource(SendEmail_CLASS, "/sendEmail_CLASS")
 api.add_resource(SendEmail, "/sendEmail")
 api.add_resource(UserInfo, "/userinfo", "/userinfo/<user_id>")
 api.add_resource(Match, "/matches/<user_uid>")
+api.add_resource(Meet, "/meet", "/meet/<user_id>")
 
 
 if __name__ == '__main__':

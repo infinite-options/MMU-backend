@@ -126,7 +126,7 @@ def processImage(key, payload):
         # Put current db images into current_images
         current_images = []
         if payload_images is not None and payload_images != '' and payload_images != 'null':
-            print("---Payload Images: ", payload_images)
+            print("---Payload Images: ", payload_images, type(payload_images))
             current_images =ast.literal_eval(payload_images)
             print('\n\n\n Current Images: ', current_images, '\n\n\n')
             print("---Current images: ", current_images, type(current_images))
@@ -149,7 +149,8 @@ def processImage(key, payload):
 
             video_file = request.files.get('user_video')
 
-            s3Link = payload.get(filename) # Used for fav images
+            s3Link = payload.get(filename) # Used for fav 
+            print('\n\n\n**** S3LINK', s3Link, '*****\n\n\n')
             # print("\n\nS3Link: ", s3Link)
 
             if file:
@@ -170,7 +171,7 @@ def processImage(key, payload):
 
             elif s3Link:
                 imageFiles[filename] = s3Link
-                images.append(s3Link)
+                # images.append(s3Link)
 
                 if filename == payload_fav_images:
                     if key_type == 'user_uid': payload["user_favorite_photo"] = image
@@ -180,6 +181,8 @@ def processImage(key, payload):
                 image_key = f'{key_type}/{key_uid}/videos/{unique_filename}'
 
                 video = uploadImage(video_file, image_key, '')
+                payload['user_video_url'] = json.dumps(video)
+
                 video_count += 1
             else:
                 break
@@ -226,7 +229,6 @@ def processImage(key, payload):
         # print("\n\nCurrent Images in Function: ", current_images, type(current_images))
 
         if key_type == 'users': payload['user_photo_url'] = json.dumps(current_images) 
-        payload['user_video_url'] = json.dumps(video) 
         # payload.pop('user_favorite_image')
 
         print("\n\nPayload before return: ", payload)
