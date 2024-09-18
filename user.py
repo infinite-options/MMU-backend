@@ -69,6 +69,22 @@ class UserInfo(Resource):
 
 
             # Process Images
+            if 'img_0' in request.files:
+                payload_query = db.execute(""" SELECT user_photo_url FROM mmu.users WHERE user_uid = \'""" + user_uid + """\'; """)     
+                
+                payload_images = payload_query['result'][0]['user_photo_url']
+                current_images = []
+                if payload_images is not None and payload_images != '' and payload_images != 'null':
+                    # print("---Payload Images: ", payload_images, type(payload_images))
+                    current_images =ast.literal_eval(payload_images)
+                    # print('\n\n\n Current Images: ', current_images, '\n\n\n')
+                    # print("---Current images: ", current_images, type(current_images))
+                
+                if len(current_images) == 3 and 'user_delete_photo' not in payload.keys():
+                    return make_response(jsonify({
+                        "message": "Please delete some photos"
+                    }), 406)
+                
             processImage(key, payload)
             userQuery = db.update('users', key, payload)
         

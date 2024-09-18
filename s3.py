@@ -100,7 +100,7 @@ def processImage(key, payload):
             print("\n\n-----------User Key passed----------------\n\n")
             key_type = 'users'
             key_uid = key['user_uid']
-            payload_delete_images = payload.pop('delete_images', None)  # Images to Delete
+            payload_delete_images = payload.pop('user_delete_photo', None)  # Images to Delete
 
             #  GET images sent by Frontend. (img_0, img_1, ..)
             if 'img_0' in request.files or 'user_video' in request.files or payload_delete_images != None: 
@@ -130,6 +130,7 @@ def processImage(key, payload):
             current_images =ast.literal_eval(payload_images)
             print('\n\n\n Current Images: ', current_images, '\n\n\n')
             print("---Current images: ", current_images, type(current_images))
+
 
         # Check if images are being added OR deleted
         images = []
@@ -177,11 +178,23 @@ def processImage(key, payload):
                     if key_type == 'user_uid': payload["user_favorite_photo"] = image
             
             elif video_file and video_count == 0:
+                video_query = db.execute(""" SELECT user_video_url FROM mmu.users WHERE user_uid = \'""" + key_uid + """\'; """)
+                delete_video = video_query['result'][0]['user_video_url']
+                delete_video =ast.literal_eval(delete_video)
                 unique_filename = f"{key_uid}" + "_" + datetime.datetime.utcnow().strftime('%Y%m%d%H%M%SZ')
                 image_key = f'{key_type}/{key_uid}/videos/{unique_filename}'
 
                 video = uploadImage(video_file, image_key, '')
                 payload['user_video_url'] = json.dumps(video)
+
+                try:
+                    print('\n\n\n*****', delete_video, '\n\n\n*****')
+                    if delete_video:
+                        delete_key = delete_video.split('io-mmu/', 1)[1]
+                        print("\n\nDelete key\n\n\n\n", delete_key)
+                        deleteImage(delete_key)
+                except: 
+                    print("could not delete from S3")
 
                 video_count += 1
             else:
@@ -191,40 +204,30 @@ def processImage(key, payload):
         print("Images after loop: ", images)
         if images != []:
             current_images.extend(images)
-            
-        # try:
-        #     file = request.files.get('user_video')
-        #     if file:
-        #         unique_filename = f"{key_uid}" + "_" + datetime.datetime.utcnow().strftime('%Y%m%d%H%M%SZ')
-        #         image_key = f'{key_type}/{key_uid}/videos/{unique_filename}'
-
-        #         video = uploadImage(file, image_key, '')
-        # except Exception as e:
-        #     return (e)
 
         # Delete Images
-        # if payload_delete_images:
-        #     print("In image delete: ", payload_delete_images, type( payload_delete_images))
-        #     delete_images = ast.literal_eval(payload_delete_images)
-        #     print("After ast: ", delete_images, type(delete_images), len(delete_images))
-        #     for image in delete_images:
-        #         # print("Image to Delete: ", image, type(image))
-        #         # print("Payload Image:", current_images, type(current_images))
-        #         # print("Current images before deletion:", [doc['link'] for doc in current_images])
+        if payload_delete_images:
+            print("In image delete: ", payload_delete_images, type( payload_delete_images))
+            delete_images = ast.literal_eval(payload_delete_images)
+            print("After ast: ", delete_images, type(delete_images), len(delete_images))
+            for image in delete_images:
+                # print("Image to Delete: ", image, type(image))
+                # print("Payload Image:", current_images, type(current_images))
+                # print("Current images before deletion:", [doc['link'] for doc in current_images])
 
-        #         # Delete from db list assuming it is in db list
-        #         try:
-        #             current_images.remove(image)   # Works becuase this is an Exact match
-        #         except:
-        #             print("Image not in list")
+                # Delete from db list assuming it is in db list
+                try:
+                    current_images.remove(image)   # Works becuase this is an Exact match
+                except:
+                    print("Image not in list")
 
-        #         #  Delete from S3 Bucket
-        #         try:
-        #             delete_key = image.split('io-pm/', 1)[1]
-        #             # print("Delete key", delete_key)
-        #             deleteImage(delete_key)
-        #         except: 
-        #             print("could not delete from S3")
+                #  Delete from S3 Bucket
+                try:
+                    delete_key = image.split('io-mmu/', 1)[1]
+                    # print("Delete key", delete_key)
+                    deleteImage(delete_key)
+                except: 
+                    print("could not delete from S3")
             
         # print("\n\nCurrent Images in Function: ", current_images, type(current_images))
 
