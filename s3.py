@@ -180,7 +180,6 @@ def processImage(key, payload):
             elif video_file and video_count == 0:
                 video_query = db.execute(""" SELECT user_video_url FROM mmu.users WHERE user_uid = \'""" + key_uid + """\'; """)
                 delete_video = video_query['result'][0]['user_video_url']
-                delete_video =ast.literal_eval(delete_video)
                 unique_filename = f"{key_uid}" + "_" + datetime.datetime.utcnow().strftime('%Y%m%d%H%M%SZ')
                 image_key = f'{key_type}/{key_uid}/videos/{unique_filename}'
 
@@ -190,6 +189,7 @@ def processImage(key, payload):
                 try:
                     print('\n\n\n*****', delete_video, '\n\n\n*****')
                     if delete_video:
+                        delete_video =ast.literal_eval(delete_video)
                         delete_key = delete_video.split('io-mmu/', 1)[1]
                         print("\n\nDelete key\n\n\n\n", delete_key)
                         deleteImage(delete_key)
