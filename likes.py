@@ -21,7 +21,8 @@ class Likes(Resource):
                                        u.user_first_name, 
                                        u.user_last_name, 
                                        u.user_age, 
-                                       u.user_gender
+                                       u.user_gender,
+                                       u.user_photo_url
                                 FROM mmu.likes l1
                                 LEFT JOIN mmu.users u ON l1.liked_user_id = u.user_uid
                                 WHERE l1.liker_user_id = "{user_id}" AND EXISTS (
