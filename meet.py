@@ -31,19 +31,24 @@ class Meet(Resource):
                 meetQuery = db.insert('meet', payload)
                 meetQuery['meet_uid'] = new_user_uid['result'][0]['new_id']
 
-                # try:
-                #     data = {
-                #         "receiver": "saumyashah4751@gmail.com",
-                #         "email_subject": "MySpace CRON Jobs Completed",
-                #         "email_body": "The Following CRON Jobs Ran:"
-                #     }
-                #     email_response = requests.post('http://127.0.0.1:4000/sendEmail', json=data)
+                userQuery = db.execute(f'''SELECT user_first_name FROM mmu.users WHERE user_uid = "{payload['meet_user_id']}"''', cmd='get')
+                print(userQuery)
+                userName = userQuery['result'][0]['user_first_name']
 
-                #     return "Email Sent", 200
-                # except:
-                #     return jsonify({
-                #         "message": "Error in sending the email"
-                #     })
+                data = {
+                    "announcement_title": "New Meet",
+                    "announcement_message": f"You are invited to meet {userName}",
+                    "announcement_mode": "Meet",
+                    "announcement_receiver": [f"{payload['meet_date_user_id']}"]
+                }
+
+                try:
+                    response = requests.post("http://127.0.0.1:4000/announcements", json=data)
+                except:
+                    return jsonify({
+                        "message": "Error in anouncement API (from Meet)",
+                        "code": 400
+                    })
 
             return meetQuery
         

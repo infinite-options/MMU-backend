@@ -1,5 +1,6 @@
 from flask_restful import Resource
 from flask import jsonify, make_response, request
+import requests
 
 from data import connect
 
@@ -87,16 +88,35 @@ class Likes(Resource):
     def post(self):
 
         try:
-            
             with connect() as db:
                 new_like_uid = db.call(procedure='new_like_uid')
                 print(new_like_uid)
+
                 payload = request.form.to_dict()
                 payload['like_uid'] = new_like_uid['result'][0]['new_id']
 
                 likeQuery = db.insert('likes', payload)
                 likeQuery['like_uid'] = new_like_uid['result'][0]['new_id']
 
+                userQuery = db.execute(f'''SELECT user_first_name FROM mmu.users WHERE user_uid = "{payload['liker_user_id']}"''', cmd='get')
+                print(userQuery)
+                userName = userQuery['result'][0]['user_first_name']
+
+                data = {
+                    "announcement_title": "New Like",
+                    "announcement_message": f"You were liked by {userName}",
+                    "announcement_mode": "Like",
+                    "announcement_receiver": [f"{payload['liked_user_id']}"]
+                }
+
+                try:
+                    response = requests.post("http://127.0.0.1:4000/announcements", json=data)
+                except:
+                    return jsonify({
+                        "message": "Error in anouncement API (from Likes)",
+                        "code": 400
+                    })
+                
             return likeQuery
 
 
@@ -108,8 +128,8 @@ class Likes(Resource):
             }), 400)
     
     def delete(self):
-        try:
 
+        try:
             liker_user_id = request.form.get('liker_user_id')
             liked_user_id = request.form.get('liked_user_id')
             with connect() as db:
