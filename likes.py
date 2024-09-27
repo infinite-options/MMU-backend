@@ -1,8 +1,10 @@
 from flask_restful import Resource
-from flask import jsonify, make_response, request
+from flask import jsonify, make_response, request, json
 import requests
 
 from data import connect
+
+from announcements import Announcements
 
 class Likes(Resource):
 
@@ -89,10 +91,26 @@ class Likes(Resource):
 
         try:
             with connect() as db:
+                payload = request.form.to_dict()
+
+                try:
+                    checkQuery = db.select('likes', where=payload)
+                    if checkQuery['result']:
+                        checkQuery["message"] = "You've already liked this user"
+                        return checkQuery
+
+                        # return make_response(jsonify({
+                        #     "message": "You've already liked this user"
+                        # }), 406)
+                    
+                except:
+                    return jsonify({
+                        "message": "Error in check query"
+                    })
+                
                 new_like_uid = db.call(procedure='new_like_uid')
                 print(new_like_uid)
 
-                payload = request.form.to_dict()
                 payload['like_uid'] = new_like_uid['result'][0]['new_id']
 
                 likeQuery = db.insert('likes', payload)
@@ -110,7 +128,8 @@ class Likes(Resource):
                 }
 
                 try:
-                    response = requests.post("http://127.0.0.1:4000/announcements", json=data)
+                    # response = requests.post("http://127.0.0.1:4000/announcements", json=data)
+                    response = Announcements().post(data)
                 except:
                     return jsonify({
                         "message": "Error in anouncement API (from Likes)",

@@ -12,10 +12,10 @@ class Announcements(Resource):
 
         return response
 
-    def post(self):
+    def post(self, payload):
         print("In Announcements POST")
         response = {}
-        payload = request.get_json()
+        # payload = request.get_json()
 
         if isinstance(payload["announcement_receiver"], list):
             receivers = payload["announcement_receiver"]

@@ -13,6 +13,9 @@ import mimetypes
 import ast
 # from s3 import processImage, uploadImage, deleteImage
 
+from dotenv import load_dotenv
+load_dotenv()
+
 # s3 = boto3.client(
 #     's3',
 #     aws_access_key_id=os.getenv('S3_KEY'),

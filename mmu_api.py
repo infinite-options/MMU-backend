@@ -8,7 +8,8 @@
 # README:  Debug Mode may need to be set to False when deploying live (although it seems to be working through Zappa)
 # README:  if there are errors, make sure you have all requirements are loaded
 # pip3 install -r requirements.txt
-
+# import eventlet
+# eventlet.monkey_patch()
 
 # SECTION 1:  IMPORT FILES AND FUNCTIONS
 # from users import UserInfo
@@ -17,7 +18,7 @@ from user import UserInfo
 from matches import Match
 from meet import Meet
 from likes import Likes
-from messages import Messages
+from messages import Messages, get_conversation_id
 from data import connect, disconnect
 from announcements import Announcements
 from s3 import uploadImage, s3
@@ -63,6 +64,9 @@ from twilio.rest import Client
 # from math import ceil
 from werkzeug.exceptions import BadRequest, NotFound
 
+# from flask_socketio import SocketIO, emit, join_room, leave_room
+
+
 # used for serializer email and error handling
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
 
@@ -89,6 +93,7 @@ s3 = boto3.client('s3')
 
 
 app = Flask(__name__)
+# socketio = SocketIO(app, cors_allowed_origins="*")
 api = Api(app)
 # load_dotenv()
 
@@ -1799,7 +1804,44 @@ class stripe_key(Resource):
 
 #         return response
 
-  
+#  -- WEB SOCKET FOR CHATTING    -----------------------------------------
+# @socketio.on('connect', namespace='/chat')
+# def handle_connect():
+#     print('Client Connected')
+#     room = "300-000001"
+#     join_room(room)
+#     emit('connection_response', {'message': 'Connected Successfully'}, namespace='/chat')
+
+# @socketio.on('join_conversation', namespace='/chat')
+# def handle_join_conversation(data):
+#     print('\n\n', "In Connection of Socket", '\n\n')
+#     conversation_uid = get_conversation_id(data['user_id_1'], data['user_id_2'])
+#     room = conversation_uid
+#     data['conversation_uid'] = conversation_uid
+
+#     join_room(room)
+#     emit('user_joined', {'msg': f"User {data['user_id']} has joined the conversation"}, room=room)
+
+# @socketio.on('send_message', namespace='/chat')
+# def handle_send_message(data):
+#     print("\n\n In send message \n\n")
+#     conversation_uid = get_conversation_id(data['user_id_1'], data['user_id_2'])
+#     room = conversation_uid
+#     data['conversation_uid'] = conversation_uid
+#     # conversation_uid = data['conversation_uid']
+#     store_message_in_db(data)
+#     emit('receive_message', data, room=room)
+
+# @socketio.on('leave_conversation', namespace='/chat')
+# def handle_leave_conversation(data):
+#     conversation_uid = get_conversation_id(data['user_id_1'], data['user_id_2'])
+#     room = conversation_uid
+#     data['conversation_uid'] = conversation_uid
+#     leave_room(room)
+#     emit('user_left', {'msg': f"User {data['user_id']} has left the conversation"}, room=room)
+
+# def store_message_in_db(data):
+#     pass
 
 #  -- ACTUAL ENDPOINTS    -----------------------------------------
 
@@ -1820,4 +1862,5 @@ api.add_resource(Announcements, "/announcements", "/announcements/<user_id>")
 
 
 if __name__ == '__main__':
+    # socketio.run(app, host='127.0.0.1', port=4000, debug=True)
     app.run(host='127.0.0.1', port=4000)

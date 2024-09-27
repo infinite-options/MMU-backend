@@ -4,6 +4,8 @@ import requests
 
 from data import connect
 
+from announcements import Announcements
+
 class Meet(Resource):
 
     def get(self, user_id):
@@ -43,7 +45,9 @@ class Meet(Resource):
                 }
 
                 try:
-                    response = requests.post("http://127.0.0.1:4000/announcements", json=data)
+                    # response = requests.post("http://127.0.0.1:4000/announcements", json=data)
+                    response = Announcements().post(data)
+                    meetQuery['announcements added'] = "TRUE"
                 except:
                     return jsonify({
                         "message": "Error in anouncement API (from Meet)",

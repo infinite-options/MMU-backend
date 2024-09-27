@@ -4,94 +4,90 @@ from flask_restful import Resource
 from data import connect
 import ast
 
-
 class Match(Resource):
 
     def get(self, user_uid):
-        #cols='user_prefer_age_min, user_prefer_age_max, user_prefer_height_min, user_prefer_distance, user_prefer_gender, user_latitude, user_longitude, user_open_to, user_height, user_gender, user_age, user_sexuality'
+        
         with connect() as db:
-
             try:
-                response = db.select('users', where={'user_uid': user_uid}, cols='user_prefer_age_min, user_prefer_age_max, user_prefer_height_min, user_prefer_distance, user_prefer_gender, user_latitude, user_longitude, user_open_to, user_height, user_gender, user_age, user_sexuality')
-                print('\n\n\n response', response)
-                response = response['result'][0]
-
-                                    #             user_uid, 
-                                    # user_first_name,
-                                    # user_last_name,
-                                    # user_age,
-                                    # user_gender,
-                                    # user_general_interests,
-                                    # user_date_interests,    
-                                    # user_profile_bio,
-                                    # user_height,
-                                    # user_star_sign,
-                                    # user_education,
-                                    # user_body_composition,
-                                    # user_job,
-                                    # user_smoking,
-                                    # user_nationality,
-                                    # user_photo_url,
-                                    # user_suburb,
-                                    # user_video_url,
-
-                # Using Haversine formula
-                if response['user_prefer_gender']:
-                    query = f'''SELECT *, 
-                                        (6371 * acos(
-                                            cos(radians("{response['user_latitude']}")) * cos(radians(user_latitude)) * 
-                                            cos(radians(user_longitude) - radians("{response['user_longitude']}")) + 
-                                            sin(radians("{response['user_latitude']}")) * sin(radians(user_latitude))
-                                        )) AS distance
-                                FROM mmu.users
-                                WHERE user_uid != "{user_uid}" AND user_gender = "{response['user_prefer_gender']}" AND user_height >= "{response['user_prefer_height_min']}" AND user_age BETWEEN {response['user_prefer_age_min']} AND {response['user_prefer_age_max']} AND user_sexuality IN ({response['user_open_to']})
-                                HAVING distance < {response['user_prefer_distance']}
-                                ORDER BY distance;'''
-                else:
-                    query = f'''SELECT *, 
-                                        (6371 * acos(
-                                            cos(radians("{response['user_latitude']}")) * cos(radians(user_latitude)) * 
-                                            cos(radians(user_longitude) - radians("{response['user_longitude']}")) + 
-                                            sin(radians("{response['user_latitude']}")) * sin(radians(user_latitude))
-                                        )) AS distance
-                                FROM mmu.users
-                                WHERE user_uid != "{user_uid}" AND user_height >= "{response['user_prefer_height_min']}" AND user_age BETWEEN {response['user_prefer_age_min']} AND {response['user_prefer_age_max']} AND user_sexuality IN ({response['user_open_to']})
-                                HAVING distance < {response['user_prefer_distance']}
-                                ORDER BY distance;'''
                 
-                # query = f'''SELECT *, 
-                #                     (6371 * acos(
-                #                         cos(radians("{response['user_latitude']}")) * cos(radians(user_latitude)) * 
-                #                         cos(radians(user_longitude) - radians("{response['user_longitude']}")) + 
-                #                         sin(radians("{response['user_latitude']}")) * sin(radians(user_latitude))
-                #                     )) AS distance
-                #             FROM mmu.users
-                #             WHERE user_uid != "{user_uid}" AND user_gender = "{response['user_prefer_gender']}" AND user_height >= "{response['user_prefer_height_min']}" AND user_age BETWEEN {response['user_prefer_age_min']} AND {response['user_prefer_age_max']} AND user_sexuality = "{response['user_open_to']}"
-                #             HAVING distance < {response['user_prefer_distance']}
-                #             ORDER BY distance;'''
-                
-                matchQuery = db.execute(query)
+                primary_user = db.select('users', where={'user_uid': user_uid})
 
+                if not primary_user['result']:
+                    return make_response(jsonify({
+                        "message": f"User id {user_uid} doesn't exists"
+                    }), 400)
+                
+                user = primary_user['result'][0]
+                print('\n\n Information of primary user: \n', user, '\n\n')
+
+                primary_user_open_to = ast.literal_eval(user['user_open_to'])
+                formatted_user_open_to = ', '.join(f"'{item}'" for item in primary_user_open_to)
+
+                primary_user_prefer_gender = f"'{user['user_prefer_gender']}'"
+
+                if not primary_user_prefer_gender:
+                    primary_user_prefer_gender = "'Male','Female','Non-Binary'"
+                
+                # get users that matches primary_user's preferences
+                query = f'''SELECT *, 
+                                    (6371 * acos(
+                                        cos(radians("{user['user_latitude']}")) * cos(radians(user_latitude)) * 
+                                        cos(radians(user_longitude) - radians("{user['user_longitude']}")) + 
+                                        sin(radians("{user['user_latitude']}")) * sin(radians(user_latitude))
+                                    )) AS distance
+                            FROM mmu.users
+                            WHERE user_uid != "{user_uid}"
+                            AND user_height >= "{user['user_prefer_height_min']}"
+                            AND user_gender IN ({primary_user_prefer_gender})
+                            AND user_age BETWEEN {user['user_prefer_age_min']} AND {user['user_prefer_age_max']}
+                            AND user_sexuality IN ({formatted_user_open_to})
+                            HAVING distance < {user['user_prefer_distance']}
+                            ORDER BY distance;'''
+
+                matched_users = db.execute(query, cmd='get')
+
+                if not matched_users['result']:
+                    query = f'''SELECT
+                                CONCAT(FLOOR(user_age / 10) * 10, '-', FLOOR(user_age / 10) * 10 + 9) AS age_range,
+                                COUNT(*) AS user_count
+                            FROM
+                                users
+                            WHERE
+                                user_gender IN ({primary_user_prefer_gender})
+                            GROUP BY age_range
+                            ORDER BY user_count DESC;'''
+                    
+                    result = db.execute(query)
+                    result["message"] = "No matching users found"
+                    return jsonify(result)
+
+                # matching it 2 way
                 try:
+                    print("In 2 way algorithm")
+                    response = {}
                     result = []
-                    for user in matchQuery['result']:
-                        #user['user_prefer_gender'] == response['user_gender'] and 
-                        open_to = ast.literal_eval(user['user_open_to'])
+                    for matched_user in matched_users['result']:
+                        matcher_user_open_to = ast.literal_eval(matched_user['user_open_to'])
 
-                        if (user['user_prefer_height_min'] <= response['user_height'] and 
-                            user['user_prefer_age_min']<=response['user_age']<=user['user_prefer_age_max'] and response['user_sexuality'] in open_to):
-                            result.append(user)
+                        if (user['user_height'] >= matched_user['user_prefer_height_min'] and 
+                            matched_user['user_prefer_age_min'] <= user['user_age'] <= matched_user['user_prefer_age_max'] and 
+                            matched_user['user_sexuality'] in matcher_user_open_to):
+
+                            result.append(matched_user)
+
+                    response['message'] = 'Algorithm ran successfully'
+                    response['code'] = 200
+                    response['result'] = result
+                    
                 except:
                     return jsonify({
                         "message": "error in 2 ways algorithm in the backend"
                     })
 
-                return jsonify({
-                    "message": "Successfully executed SQL query",
-                    "code": 200,
-                    "result": result})
-            
+                return response
+
             except:
-                return make_response(jsonify({
-                    "message": "error in fetching data in the backend"
-                }), 401)
+                return jsonify({
+                    "message": "Error in algorithm"
+                })
