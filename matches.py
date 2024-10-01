@@ -24,10 +24,14 @@ class Match(Resource):
                 primary_user_open_to = ast.literal_eval(user['user_open_to'])
                 formatted_user_open_to = ', '.join(f"'{item}'" for item in primary_user_open_to)
 
-                primary_user_prefer_gender = f"'{user['user_prefer_gender']}'"
-
-                if not primary_user_prefer_gender:
+                if not user['user_prefer_gender'] or user['user_prefer_gender'] is None:
                     primary_user_prefer_gender = "'Male','Female','Non-Binary'"
+                else:
+                    primary_user_prefer_gender = f"'{user['user_prefer_gender']}'"
+                
+                # if not primary_user_prefer_gender or primary_user_prefer_gender == "None":
+                #     print('\n\n In If')
+                #     primary_user_prefer_gender = "'Male','Female','Non-Binary'"
                 
                 # get users that matches primary_user's preferences
                 query = f'''SELECT *, 
