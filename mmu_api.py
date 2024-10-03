@@ -8,8 +8,8 @@
 # README:  Debug Mode may need to be set to False when deploying live (although it seems to be working through Zappa)
 # README:  if there are errors, make sure you have all requirements are loaded
 # pip3 install -r requirements.txt
-import eventlet
-eventlet.monkey_patch()
+# import eventlet
+# eventlet.monkey_patch()
 
 # SECTION 1:  IMPORT FILES AND FUNCTIONS
 # from users import UserInfo
@@ -21,6 +21,7 @@ from likes import Likes
 from messages import Messages, get_conversation_id
 from data import connect, disconnect
 from announcements import Announcements
+from password import Password
 from s3 import uploadImage, s3
 
 import os
@@ -64,7 +65,7 @@ from twilio.rest import Client
 # from math import ceil
 from werkzeug.exceptions import BadRequest, NotFound
 
-from flask_socketio import SocketIO, emit, join_room, leave_room, send
+# from flask_socketio import SocketIO, emit, join_room, leave_room, send
 
 
 # used for serializer email and error handling
@@ -93,7 +94,7 @@ s3 = boto3.client('s3')
 
 
 app = Flask(__name__)
-socketio = SocketIO(app, cors_allowed_origins="*")
+# socketio = SocketIO(app, cors_allowed_origins="*")
 api = Api(app)
 # load_dotenv()
 
@@ -1827,56 +1828,56 @@ def get_conversation_uid(sender_id, receiver_id, db):
 
 
 
-@socketio.on('connect', namespace='/chat')
-def handle_connect():
-    print('Client Connected')
+# @socketio.on('connect', namespace='/chat')
+# def handle_connect():
+#     print('Client Connected')
 
-@socketio.on('join_conversation', namespace='/chat')
-def handle_join_conversation(data):
-    print('\n\n', "In Join Conversation of Socket", '\n\n')
+# @socketio.on('join_conversation', namespace='/chat')
+# def handle_join_conversation(data):
+#     print('\n\n', "In Join Conversation of Socket", '\n\n')
 
-    conversation_id = get_conversation_uid(data['user_id_1'], data['user_id_2'], connect())
-    room = conversation_id
-    print('\n\n Conversation ID:', conversation_id)
+#     conversation_id = get_conversation_uid(data['user_id_1'], data['user_id_2'], connect())
+#     room = conversation_id
+#     print('\n\n Conversation ID:', conversation_id)
 
-    join_room(room)
-    emit('join_announcement', {'room_id': room, 'msg': f"Users has joined the conversation"}, room=room)
+#     join_room(room)
+#     emit('join_announcement', {'room_id': room, 'msg': f"Users has joined the conversation"}, room=room)
 
-@socketio.on('send_message', namespace='/chat')
-def handle_send_message(data):
-    print("\n\n In Send Message of Socket \n\n")
+# @socketio.on('send_message', namespace='/chat')
+# def handle_send_message(data):
+#     print("\n\n In Send Message of Socket \n\n")
 
-    room = data['room']
-    sender_id = data['sender_id']
+#     room = data['room']
+#     sender_id = data['sender_id']
 
-    store_message_in_db(sender_id, data['message'], room)
+#     store_message_in_db(sender_id, data['message'], room)
 
-    emit('receive_message', data['message'], room=room)
+#     emit('receive_message', data['message'], room=room)
 
-@socketio.on('leave_conversation', namespace='/chat')
-def handle_leave_conversation(data):
-    print("\n\n In Leave Conversation")
+# @socketio.on('leave_conversation', namespace='/chat')
+# def handle_leave_conversation(data):
+#     print("\n\n In Leave Conversation")
 
-    room = data['room']
+#     room = data['room']
 
-    leave_room(room)
+#     leave_room(room)
 
-    emit('leave_announcement', {'msg': f"User {data['user_id']} has left the conversation"}, room=data['user_id'])
+#     emit('leave_announcement', {'msg': f"User {data['user_id']} has left the conversation"}, room=data['user_id'])
 
-def store_message_in_db(sender_id, message, conversation_id):
-    print("\n\n In Store Message DB \n\n")
-    try:   
-        with connect() as db:
-            new_message_id = db.call(procedure='new_message_uid')
-            new_message_id = new_message_id['result'][0]['new_id']
-            message_query = f'''INSERT INTO mmu.messages (message_uid, message_conversation_id, message_sender_user_id, message_content)
-                            VALUES ("{new_message_id}","{conversation_id}","{sender_id}","{message}")'''
+# def store_message_in_db(sender_id, message, conversation_id):
+#     print("\n\n In Store Message DB \n\n")
+#     try:   
+#         with connect() as db:
+#             new_message_id = db.call(procedure='new_message_uid')
+#             new_message_id = new_message_id['result'][0]['new_id']
+#             message_query = f'''INSERT INTO mmu.messages (message_uid, message_conversation_id, message_sender_user_id, message_content)
+#                             VALUES ("{new_message_id}","{conversation_id}","{sender_id}","{message}")'''
             
-            response = db.execute(message_query, cmd="post")
+#             response = db.execute(message_query, cmd="post")
 
-            return response
-    except:
-        return "Error in store message in db"
+#             return response
+#     except:
+#         return "Error in store message in db"
 
 #  -- ACTUAL ENDPOINTS    -----------------------------------------
 
@@ -1891,11 +1892,12 @@ api.add_resource(Meet, "/meet", "/meet/<user_id>")
 api.add_resource(Likes,  "/likes", "/likes/<user_id>")
 api.add_resource(Messages, "/messages")
 api.add_resource(Announcements, "/announcements", "/announcements/<user_id>")
+api.add_resource(Password, "/resetpassword")
 
 
 # api.add_resource(SendEmail, "/sendemail")
 
 
 if __name__ == '__main__':
-    socketio.run(app, host='127.0.0.1', port=4000, debug=True)
-    # app.run(host='127.0.0.1', port=4000)
+    # socketio.run(app, host='127.0.0.1', port=4000, debug=True)
+    app.run(host='127.0.0.1', port=4000)

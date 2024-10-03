@@ -97,12 +97,9 @@ class Likes(Resource):
                     checkQuery = db.select('likes', where=payload)
                     if checkQuery['result']:
                         checkQuery["message"] = "You've already liked this user"
+
                         return checkQuery
 
-                        # return make_response(jsonify({
-                        #     "message": "You've already liked this user"
-                        # }), 406)
-                    
                 except:
                     return jsonify({
                         "message": "Error in check query"
