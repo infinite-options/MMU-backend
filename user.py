@@ -75,18 +75,25 @@ class UserInfo(Resource):
                 payload_images = payload_query['result'][0]['user_photo_url']
                 current_images = []
                 if payload_images is not None and payload_images != '' and payload_images != 'null':
-                    # print("---Payload Images: ", payload_images, type(payload_images))
                     current_images =ast.literal_eval(payload_images)
-                    # print('\n\n\n Current Images: ', current_images, '\n\n\n')
-                    # print("---Current images: ", current_images, type(current_images))
                 
-                if len(current_images) == 3 and 'user_delete_photo' not in payload.keys():
+                new_image_count = 0
+                for i in range(3):
+                    if f"img_{i}" in request.files:
+                        new_image_count += 1
+
+                if (len(current_images) + new_image_count > 3 and 'user_delete_photo' not in payload.keys()):
                     return make_response(jsonify({
                         "message": "Please delete some photos"
+                    }), 406)
+
+                if ('user_delete_photo' in payload.keys() and (len(current_images) + new_image_count - len(ast.literal_eval(payload['user_delete_photo']))) > 3):
+                    extra = (len(current_images) + new_image_count - len(ast.literal_eval(payload['user_delete_photo']))) 
+                    return make_response(jsonify({
+                        "message": f"You already have {len(current_images)} photos uploaded. You are deleting {len(ast.literal_eval(payload['user_delete_photo']))} photo(s) and trying to add {new_image_count} new photo(s). There is/are {extra - 3} extra photo(s)."
                     }), 406)
                 
             processImage(key, payload)
             userQuery = db.update('users', key, payload)
         
-        # return userQuery
         return userQuery

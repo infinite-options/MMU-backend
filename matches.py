@@ -53,26 +53,26 @@ class Match(Resource):
 
                 if not matched_users['result']:
                     
-                    query = f'''SELECT
-                                    FLOOR(user_age / 10) * 10 AS min_age, 
-                                    (FLOOR(user_age / 10) * 10 + 9) AS max_age,
-                                    FLOOR(user_height / 10) * 10 AS min_height,
-                                    FLOOR(6371 * acos(
-                                        cos(radians("{user['user_latitude']}")) * cos(radians(user_latitude)) * 
-                                        cos(radians(user_longitude) - radians("{user['user_longitude']}")) + 
-                                        sin(radians("{user['user_latitude']}")) * sin(radians(user_latitude))
-                                    )) AS min_distance,
-                                    COUNT(*) AS user_count
-                                FROM
-                                    users
-                                WHERE
-                                    user_gender IN ({primary_user_prefer_gender})
-                                GROUP BY FLOOR(user_age / 10)
-                                ORDER BY user_count DESC;'''
+                    # query = f'''SELECT
+                    #                 FLOOR(user_age / 10) * 10 AS min_age, 
+                    #                 (FLOOR(user_age / 10) * 10 + 9) AS max_age,
+                    #                 FLOOR(user_height / 10) * 10 AS min_height,
+                    #                 FLOOR(6371 * acos(
+                    #                     cos(radians("{user['user_latitude']}")) * cos(radians(user_latitude)) * 
+                    #                     cos(radians(user_longitude) - radians("{user['user_longitude']}")) + 
+                    #                     sin(radians("{user['user_latitude']}")) * sin(radians(user_latitude))
+                    #                 )) AS min_distance,
+                    #                 COUNT(*) AS user_count
+                    #             FROM
+                    #                 users
+                    #             WHERE
+                    #                 user_gender IN ({primary_user_prefer_gender})
+                    #             GROUP BY FLOOR(user_age / 10)
+                    #             ORDER BY user_count DESC;'''
                                                     
-                    result = db.execute(query)
-                    result["message"] = "No matching users found"
-                    result["current_preferences"] = f"'user_prefered_age_min': {user['user_prefer_age_min']}, 'user_prefered_age_max': {user['user_prefer_age_max']}, 'user_prefer_height_min': {user['user_prefer_height_min']}, 'user_prefer_distance': {user['user_prefer_distance']}"
+                    # result = db.execute(query)
+                    result["message"] = "No matching users found. Working on it!!!"
+                    # result["current_preferences"] = f"'user_prefered_age_min': {user['user_prefer_age_min']}, 'user_prefered_age_max': {user['user_prefer_age_max']}, 'user_prefer_height_min': {user['user_prefer_height_min']}, 'user_prefer_distance': {user['user_prefer_distance']}"
                     return jsonify(result)
 
                 # matching it 2 way
