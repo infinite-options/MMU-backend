@@ -3,104 +3,221 @@ from flask_restful import Resource
 
 from data import connect
 import ast
+import math
+
+def get_matches_sexuality_open_to(current_user_data, user_uid):
+    try:
+        current_user_prefer_gender = current_user_data['user_prefer_gender']
+
+        current_user_open_to = ast.literal_eval(current_user_data['user_open_to'])
+        current_user_open_to = ', '.join(f"'{item}'" for item in current_user_open_to)
+        if not current_user_prefer_gender or current_user_prefer_gender is None:
+            current_user_prefer_gender = "'Male','Female','Non-Binary'"
+        else:
+            current_user_prefer_gender = f"'{current_user_prefer_gender}'"
+        
+        with connect() as db:
+            query = f'''SELECT *
+                    FROM mmu.users
+                    WHERE user_uid != "{user_uid}"
+                    AND user_gender IN ({current_user_prefer_gender})
+                    AND user_sexuality IN ({current_user_open_to})
+                    '''
+
+            matched_users_response = db.execute(query, cmd='get')
+
+            if not matched_users_response['result']:
+                return (False, matched_users_response)
+            
+            return (True, matched_users_response)
+        
+    except Exception as e:
+        return jsonify({
+            "message": "Error in Get Matches Sexuality"
+        })
+
+def calculate_distance(current_user_lat, current_user_long, user_lat, user_long):
+    lat1 = math.radians(float(current_user_lat))
+    lon1 = math.radians(float(current_user_long))
+    lat2 = math.radians(float(user_lat))
+    lon2 = math.radians(float(user_long))
+
+    # Haversine formula
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+
+    a = math.sin(dlat / 2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2)**2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+    R = 6371.0
+
+    distance = R * c
+
+    return distance
+
+def get_matches_age_height_distance(current_user_data, matches):
+    try:
+        current_user_min_age_preference = current_user_data['user_prefer_age_min']
+        current_user_max_age_preference = current_user_data['user_prefer_age_max']
+        current_user_min_height_preference = current_user_data['user_prefer_height_min']
+        current_user_max_distance_preference = current_user_data['user_prefer_distance']
+        current_user_latitude = current_user_data['user_latitude']
+        current_user_longitude = current_user_data['user_longitude']
+
+        result = []
+
+        for match in matches:
+            distance = calculate_distance(current_user_latitude, current_user_longitude, match['user_latitude'], match['user_longitude'])
+            match['distance'] = distance
+            if (current_user_min_age_preference <= match['user_age'] <= current_user_max_age_preference and
+                match['user_height'] >= current_user_min_height_preference and
+                distance <= current_user_max_distance_preference
+                ):
+                result.append(match)
+
+        return (result, matches)
+    
+    except Exception as e:
+        return jsonify({
+            "message": "Error in Get Matches age height distance"
+        })
+
+def suggest_age_min(current_user_data, matches):
+    current_user_min_age_preference = current_user_data['user_prefer_age_min']
+    current_user_max_age_preference = current_user_data['user_prefer_age_max']
+    current_user_min_height_preference = current_user_data['user_prefer_height_min']
+    current_user_max_distance_preference = current_user_data['user_prefer_distance']
+    
+    for age_min in range(current_user_min_age_preference, 18, -1):
+
+        for match in matches:
+            if (age_min <= match['user_age'] <= current_user_max_age_preference and
+            match['user_height'] >= current_user_min_height_preference and
+            match['distance'] <= current_user_max_distance_preference
+            ):
+                return age_min
+    
+    return 0
+
+def suggest_age_max(current_user_data, matches):
+    current_user_min_age_preference = current_user_data['user_prefer_age_min']
+    current_user_max_age_preference = current_user_data['user_prefer_age_max']
+    current_user_min_height_preference = current_user_data['user_prefer_height_min']
+    current_user_max_distance_preference = current_user_data['user_prefer_distance']
+    
+    for age_max in range(current_user_max_age_preference, 100):
+
+        for match in matches:
+            if (current_user_min_age_preference <= match['user_age'] <= age_max and
+            match['user_height'] >= current_user_min_height_preference and
+            match['distance'] <= current_user_max_distance_preference
+            ):
+                return age_max
+    
+    return 0
+
+def suggest_height(current_user_data, matches):
+    current_user_min_age_preference = current_user_data['user_prefer_age_min']
+    height = current_user_data['user_prefer_age_max']
+    current_user_min_height_preference = current_user_data['user_prefer_height_min']
+    current_user_max_distance_preference = current_user_data['user_prefer_distance']
+    
+    for height in range(int(current_user_min_height_preference), 50, -1):
+
+        for match in matches:
+            if (current_user_min_age_preference <= match['user_age'] <= height and
+            int(match['user_height']) >= height and
+            match['distance'] <= current_user_max_distance_preference
+            ):
+                return height
+    
+    return 0
+
+def suggest_distance(current_user_data, matches):
+    current_user_min_age_preference = current_user_data['user_prefer_age_min']
+    height = current_user_data['user_prefer_age_max']
+    current_user_min_height_preference = current_user_data['user_prefer_height_min']
+    current_user_max_distance_preference = current_user_data['user_prefer_distance']
+    
+    for max_distance in range(current_user_max_distance_preference, 250):
+
+        for match in matches:
+            if (current_user_min_age_preference <= match['user_age'] <= height and
+            match['user_height'] >= current_user_min_height_preference and
+            match['distance'] <= max_distance
+            ):
+                return max_distance
+    
+    return 0
 
 class Match(Resource):
 
     def get(self, user_uid):
-        
-        with connect() as db:
-            try:
-                
-                primary_user = db.select('users', where={'user_uid': user_uid})
+        print(" In Get ")
+        try:
+            with connect() as db:
 
-                if not primary_user['result']:
+                current_user = db.select('users', where={'user_uid': user_uid})
+                
+                if not current_user['result']:
                     return make_response(jsonify({
                         "message": f"User id {user_uid} doesn't exists"
                     }), 400)
                 
-                user = primary_user['result'][0]
-                print('\n\n Information of primary user: \n', user, '\n\n')
+                current_user_data = current_user['result'][0]
+                print("Got the current user's information")
 
-                primary_user_open_to = ast.literal_eval(user['user_open_to'])
-                formatted_user_open_to = ', '.join(f"'{item}'" for item in primary_user_open_to)
-
-                if not user['user_prefer_gender'] or user['user_prefer_gender'] is None:
-                    primary_user_prefer_gender = "'Male','Female','Non-Binary'"
-                else:
-                    primary_user_prefer_gender = f"'{user['user_prefer_gender']}'"
-                
-                # if not primary_user_prefer_gender or primary_user_prefer_gender == "None":
-                #     print('\n\n In If')
-                #     primary_user_prefer_gender = "'Male','Female','Non-Binary'"
-                
-                # get users that matches primary_user's preferences
-                query = f'''SELECT *, 
-                                    (6371 * acos(
-                                        cos(radians("{user['user_latitude']}")) * cos(radians(user_latitude)) * 
-                                        cos(radians(user_longitude) - radians("{user['user_longitude']}")) + 
-                                        sin(radians("{user['user_latitude']}")) * sin(radians(user_latitude))
-                                    )) AS distance
-                            FROM mmu.users
-                            WHERE user_uid != "{user_uid}"
-                            AND user_height >= "{user['user_prefer_height_min']}"
-                            AND user_gender IN ({primary_user_prefer_gender})
-                            AND user_age BETWEEN {user['user_prefer_age_min']} AND {user['user_prefer_age_max']}
-                            AND user_sexuality IN ({formatted_user_open_to})
-                            HAVING distance < {user['user_prefer_distance']}
-                            ORDER BY distance;'''
-
-                matched_users = db.execute(query, cmd='get')
-
-                if not matched_users['result']:
-                    
-                    # query = f'''SELECT
-                    #                 FLOOR(user_age / 10) * 10 AS min_age, 
-                    #                 (FLOOR(user_age / 10) * 10 + 9) AS max_age,
-                    #                 FLOOR(user_height / 10) * 10 AS min_height,
-                    #                 FLOOR(6371 * acos(
-                    #                     cos(radians("{user['user_latitude']}")) * cos(radians(user_latitude)) * 
-                    #                     cos(radians(user_longitude) - radians("{user['user_longitude']}")) + 
-                    #                     sin(radians("{user['user_latitude']}")) * sin(radians(user_latitude))
-                    #                 )) AS min_distance,
-                    #                 COUNT(*) AS user_count
-                    #             FROM
-                    #                 users
-                    #             WHERE
-                    #                 user_gender IN ({primary_user_prefer_gender})
-                    #             GROUP BY FLOOR(user_age / 10)
-                    #             ORDER BY user_count DESC;'''
-                                                    
-                    # result = db.execute(query)
-                    result["message"] = "No matching users found. Working on it!!!"
-                    # result["current_preferences"] = f"'user_prefered_age_min': {user['user_prefer_age_min']}, 'user_prefered_age_max': {user['user_prefer_age_max']}, 'user_prefer_height_min': {user['user_prefer_height_min']}, 'user_prefer_distance': {user['user_prefer_distance']}"
-                    return jsonify(result)
-
-                # matching it 2 way
-                try:
-                    print("In 2 way algorithm")
-                    response = {}
-                    result = []
-                    for matched_user in matched_users['result']:
-                        matcher_user_open_to = ast.literal_eval(matched_user['user_open_to'])
-
-                        if (user['user_height'] >= matched_user['user_prefer_height_min'] and 
-                            matched_user['user_prefer_age_min'] <= user['user_age'] <= matched_user['user_prefer_age_max'] and 
-                            user['user_sexuality'] in matcher_user_open_to):
-
-                            result.append(matched_user)
-
-                    response['message'] = 'Algorithm ran successfully'
-                    response['code'] = 200
-                    response['result'] = result
-                    
-                except:
+                check, response = get_matches_sexuality_open_to(current_user_data, user_uid)
+                if not check:
                     return jsonify({
-                        "message": "error in 2 ways algorithm in the backend"
+                        "message": "No Matches found because of preferred gender or open to list"
                     })
 
-                return response
+                result, response =  get_matches_age_height_distance(current_user_data, response['result'])
 
-            except:
-                return jsonify({
-                    "message": "Error in algorithm"
-                })
+                if not result:
+                    final_response = {}
+                    print("\n\tIn Not Result\n")
+                    age_min_suggestions = suggest_age_min(current_user_data, response)
+                    age_max_suggestions = suggest_age_max(current_user_data, response)
+                    height_suggestions = suggest_height(current_user_data, response)
+                    distance_suggestions = suggest_distance(current_user_data, response)
+
+                    if age_min_suggestions:
+                        final_response['age_min_suggestions'] = age_min_suggestions
+                    if age_max_suggestions:
+                        final_response['age_max_suggestions'] = age_max_suggestions
+                    if height_suggestions:
+                        final_response['height_suggestions'] = height_suggestions
+                    if distance_suggestions:
+                        final_response['distance_suggestions'] = distance_suggestions
+
+                    return final_response
+                
+                # Matching 2 way
+                final_result = []
+                for user in result:
+                    
+                    if (user['user_prefer_age_min'] <= current_user_data['user_age'] <= user['user_prefer_age_max'] and
+                        current_user_data['user_height'] >= user['user_prefer_height_min'] and
+                        current_user_data['user_sexuality'] in ast.literal_eval(user['user_open_to'])
+                        ):
+                        final_result.append(user)
+                
+                
+                if not final_result:
+                    return jsonify({
+                        "message": "No result found because of 2 way matching",
+                        "result of 1 way match": result
+                    })
+                else:
+                    final_result.sort(key= lambda x: x['distance'])
+                    return jsonify({
+                        "message": "Matches Found",
+                        "result": final_result,
+                    })
+        except:
+            return jsonify({
+                "code": 400,
+                "message": "There was an error while running the matching algorithm"
+            })
