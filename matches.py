@@ -1,11 +1,13 @@
 from flask import jsonify, make_response
 from flask_restful import Resource
+import json
 
 from data import connect
 import ast
 import math
 
 def get_matches_sexuality_open_to(current_user_data, user_uid):
+    print(" \n\t In Sexuality Open To Function \n")
     try:
         current_user_prefer_gender = current_user_data['user_prefer_gender']
 
@@ -26,7 +28,7 @@ def get_matches_sexuality_open_to(current_user_data, user_uid):
 
             matched_users_response = db.execute(query, cmd='get')
 
-            if not matched_users_response['result']:
+            if len(matched_users_response['result']) == 0:
                 return (False, matched_users_response)
             
             return (True, matched_users_response)
@@ -37,6 +39,7 @@ def get_matches_sexuality_open_to(current_user_data, user_uid):
         })
 
 def calculate_distance(current_user_lat, current_user_long, user_lat, user_long):
+    
     lat1 = math.radians(float(current_user_lat))
     lon1 = math.radians(float(current_user_long))
     lat2 = math.radians(float(user_lat))
@@ -56,6 +59,7 @@ def calculate_distance(current_user_lat, current_user_long, user_lat, user_long)
     return distance
 
 def get_matches_age_height_distance(current_user_data, matches):
+    print("\n\n\t in age height \n")
     try:
         current_user_min_age_preference = current_user_data['user_prefer_age_min']
         current_user_max_age_preference = current_user_data['user_prefer_age_max']
@@ -69,86 +73,73 @@ def get_matches_age_height_distance(current_user_data, matches):
         for match in matches:
             distance = calculate_distance(current_user_latitude, current_user_longitude, match['user_latitude'], match['user_longitude'])
             match['distance'] = distance
+
             if (current_user_min_age_preference <= match['user_age'] <= current_user_max_age_preference and
-                match['user_height'] >= current_user_min_height_preference and
+                int(match['user_height']) >= int(current_user_min_height_preference) and
                 distance <= current_user_max_distance_preference
                 ):
                 result.append(match)
 
-        return (result, matches)
+        return result
     
     except Exception as e:
         return jsonify({
             "message": "Error in Get Matches age height distance"
         })
 
-def suggest_age_min(current_user_data, matches):
-    current_user_min_age_preference = current_user_data['user_prefer_age_min']
-    current_user_max_age_preference = current_user_data['user_prefer_age_max']
-    current_user_min_height_preference = current_user_data['user_prefer_height_min']
-    current_user_max_distance_preference = current_user_data['user_prefer_distance']
-    
-    for age_min in range(current_user_min_age_preference, 18, -1):
 
+def suggest_age_min(current_user_data, matches):
+
+    current_user_min_age_preference = current_user_data['user_prefer_age_min']
+
+    matches.sort(key= lambda x: x['user_age'], reverse = True)
+    for age_min in range(current_user_min_age_preference, 17, -1):
         for match in matches:
-            if (age_min <= match['user_age'] <= current_user_max_age_preference and
-            match['user_height'] >= current_user_min_height_preference and
-            match['distance'] <= current_user_max_distance_preference
-            ):
+            if (age_min <= match['user_age']):
                 return age_min
-    
+
     return 0
 
 def suggest_age_max(current_user_data, matches):
-    current_user_min_age_preference = current_user_data['user_prefer_age_min']
-    current_user_max_age_preference = current_user_data['user_prefer_age_max']
-    current_user_min_height_preference = current_user_data['user_prefer_height_min']
-    current_user_max_distance_preference = current_user_data['user_prefer_distance']
-    
-    for age_max in range(current_user_max_age_preference, 100):
 
+    current_user_max_age_preference = current_user_data['user_prefer_age_max']
+
+    matches.sort(key= lambda x: x['user_age'])
+    for age_max in range(current_user_max_age_preference, 80):
         for match in matches:
-            if (current_user_min_age_preference <= match['user_age'] <= age_max and
-            match['user_height'] >= current_user_min_height_preference and
-            match['distance'] <= current_user_max_distance_preference
-            ):
+            if (age_max >= match['user_age']):
                 return age_max
     
     return 0
 
 def suggest_height(current_user_data, matches):
-    current_user_min_age_preference = current_user_data['user_prefer_age_min']
-    height = current_user_data['user_prefer_age_max']
+    matches.sort(key= lambda x: x['user_height'], reverse=True)
+
     current_user_min_height_preference = current_user_data['user_prefer_height_min']
-    current_user_max_distance_preference = current_user_data['user_prefer_distance']
     
     for height in range(int(current_user_min_height_preference), 50, -1):
-
         for match in matches:
-            if (current_user_min_age_preference <= match['user_age'] <= height and
-            int(match['user_height']) >= height and
-            match['distance'] <= current_user_max_distance_preference
-            ):
+            if (height <= int(match['user_height'])):
                 return height
     
     return 0
 
 def suggest_distance(current_user_data, matches):
-    current_user_min_age_preference = current_user_data['user_prefer_age_min']
-    height = current_user_data['user_prefer_age_max']
-    current_user_min_height_preference = current_user_data['user_prefer_height_min']
-    current_user_max_distance_preference = current_user_data['user_prefer_distance']
-    
-    for max_distance in range(current_user_max_distance_preference, 250):
 
+    current_user_max_distance_preference = current_user_data['user_prefer_distance']
+
+    matches.sort(key= lambda x: x['distance'])
+    for max_distance in range(current_user_max_distance_preference, 250):
         for match in matches:
-            if (current_user_min_age_preference <= match['user_age'] <= height and
-            match['user_height'] >= current_user_min_height_preference and
-            match['distance'] <= max_distance
-            ):
+            if (max_distance >= match['distance']):
                 return max_distance
     
     return 0
+    # if (current_user_min_age_preference <= match['user_age'] <= current_user_max_age_preference and
+    # match['user_height'] >= current_user_min_height_preference and
+    # match['distance'] <= max_distance
+    # ):
+    #     return max_distance
 
 class Match(Resource):
 
@@ -158,7 +149,7 @@ class Match(Resource):
             with connect() as db:
 
                 current_user = db.select('users', where={'user_uid': user_uid})
-                
+                    
                 if not current_user['result']:
                     return make_response(jsonify({
                         "message": f"User id {user_uid} doesn't exists"
@@ -166,38 +157,47 @@ class Match(Resource):
                 
                 current_user_data = current_user['result'][0]
                 print("Got the current user's information")
+                print(current_user_data)
 
                 check, response = get_matches_sexuality_open_to(current_user_data, user_uid)
+
                 if not check:
                     return jsonify({
                         "message": "No Matches found because of preferred gender or open to list"
                     })
 
-                result, response =  get_matches_age_height_distance(current_user_data, response['result'])
+                result =  get_matches_age_height_distance(current_user_data, response['result'])
 
                 if not result:
-                    final_response = {}
-                    print("\n\tIn Not Result\n")
-                    age_min_suggestions = suggest_age_min(current_user_data, response)
-                    age_max_suggestions = suggest_age_max(current_user_data, response)
-                    height_suggestions = suggest_height(current_user_data, response)
-                    distance_suggestions = suggest_distance(current_user_data, response)
+                    current_user_min_age_preference = current_user_data['user_prefer_age_min']
+                    current_user_max_age_preference = current_user_data['user_prefer_age_max']
+                    current_user_min_height_preference = current_user_data['user_prefer_height_min']
+                    current_user_max_distance_preference = current_user_data['user_prefer_distance']
 
-                    if age_min_suggestions:
-                        final_response['age_min_suggestions'] = age_min_suggestions
-                    if age_max_suggestions:
-                        final_response['age_max_suggestions'] = age_max_suggestions
-                    if height_suggestions:
-                        final_response['height_suggestions'] = height_suggestions
-                    if distance_suggestions:
-                        final_response['distance_suggestions'] = distance_suggestions
+                    final_response = {}
+                    final_response['message'] = "No results were found. Please try changing preferences using the following suggestions"
+
+                    age_min_suggestions = suggest_age_min(current_user_data, response['result'])
+                    age_max_suggestions = suggest_age_max(current_user_data, response['result'])
+                    height_suggestions = suggest_height(current_user_data, response['result'])
+                    distance_suggestions = suggest_distance(current_user_data, response['result'])
+
+                    print(age_min_suggestions, age_max_suggestions, height_suggestions, current_user_min_height_preference)
+
+                    if (age_min_suggestions and (age_min_suggestions != current_user_min_age_preference)):
+                        final_response['Set preferred minimum age to'] = age_min_suggestions
+                    if (age_max_suggestions and (age_max_suggestions != current_user_max_age_preference)):
+                        final_response['Set preferred maximum age to'] = age_max_suggestions
+                    if (height_suggestions and (height_suggestions != int(current_user_min_height_preference))):
+                        final_response['Set preferred minimum height to'] = height_suggestions
+                    if (distance_suggestions and (distance_suggestions != current_user_max_distance_preference)):
+                        final_response['Set preferred maximum distance to'] = distance_suggestions
 
                     return final_response
                 
                 # Matching 2 way
                 final_result = []
                 for user in result:
-                    
                     if (user['user_prefer_age_min'] <= current_user_data['user_age'] <= user['user_prefer_age_max'] and
                         current_user_data['user_height'] >= user['user_prefer_height_min'] and
                         current_user_data['user_sexuality'] in ast.literal_eval(user['user_open_to'])

@@ -77,8 +77,10 @@ class Messages(Resource):
                 message_query = f'''INSERT INTO mmu.messages (message_uid, message_conversation_id, message_sender_user_id, message_content)
                                 VALUES ("{new_message_id}","{new_conversation_id}","{sender_id}","{message_content}")'''
                 
+                
                 response = db.execute(message_query, cmd="post")
-
+                response['message_uid'] = new_message_id
+                
                 return response
 
             except:
