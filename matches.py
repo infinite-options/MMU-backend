@@ -89,57 +89,80 @@ def get_matches_age_height_distance(current_user_data, matches):
 
 
 def suggest_age_min(current_user_data, matches):
-
+    print("In age min")
     current_user_min_age_preference = current_user_data['user_prefer_age_min']
+    current_user_max_age_preference = current_user_data['user_prefer_age_max']
+    current_user_min_height_preference = current_user_data['user_prefer_height_min']
+    current_user_max_distance_preference = current_user_data['user_prefer_distance']
 
     matches.sort(key= lambda x: x['user_age'], reverse = True)
     for age_min in range(current_user_min_age_preference, 17, -1):
         for match in matches:
-            if (age_min <= match['user_age']):
-                return age_min
+            if (age_min <= match['user_age'] <= current_user_max_age_preference and
+                match['user_height'] >= current_user_min_height_preference and
+                match['distance'] <= current_user_max_distance_preference
+                ):
+                    return age_min
 
     return 0
 
 def suggest_age_max(current_user_data, matches):
-
+    print("In age max")
+    current_user_min_age_preference = current_user_data['user_prefer_age_min']
     current_user_max_age_preference = current_user_data['user_prefer_age_max']
+    current_user_min_height_preference = current_user_data['user_prefer_height_min']
+    current_user_max_distance_preference = current_user_data['user_prefer_distance']
 
     matches.sort(key= lambda x: x['user_age'])
     for age_max in range(current_user_max_age_preference, 80):
         for match in matches:
-            if (age_max >= match['user_age']):
-                return age_max
+
+            if (current_user_min_age_preference <= match['user_age'] <= age_max and
+                match['user_height'] >= current_user_min_height_preference and
+                match['distance'] <= current_user_max_distance_preference
+                ):
+                    return age_max
     
     return 0
 
 def suggest_height(current_user_data, matches):
-    matches.sort(key= lambda x: x['user_height'], reverse=True)
-
-    current_user_min_height_preference = current_user_data['user_prefer_height_min']
+    print("In height")
     
+
+    current_user_min_age_preference = current_user_data['user_prefer_age_min']
+    current_user_max_age_preference = current_user_data['user_prefer_age_max']
+    current_user_min_height_preference = current_user_data['user_prefer_height_min']
+    current_user_max_distance_preference = current_user_data['user_prefer_distance']
+    
+    matches.sort(key= lambda x: x['user_height'], reverse=True)
     for height in range(int(current_user_min_height_preference), 50, -1):
         for match in matches:
-            if (height <= int(match['user_height'])):
-                return height
-    
+            
+            if (current_user_min_age_preference <= match['user_age'] <= current_user_max_age_preference and
+                int(match['user_height']) >= height and
+                match['distance'] <= current_user_max_distance_preference
+                ):
+                    return height
     return 0
 
 def suggest_distance(current_user_data, matches):
-
+    print("In distance")
+    current_user_min_age_preference = current_user_data['user_prefer_age_min']
+    current_user_max_age_preference = current_user_data['user_prefer_age_max']
+    current_user_min_height_preference = current_user_data['user_prefer_height_min']
     current_user_max_distance_preference = current_user_data['user_prefer_distance']
 
     matches.sort(key= lambda x: x['distance'])
     for max_distance in range(current_user_max_distance_preference, 250):
         for match in matches:
-            if (max_distance >= match['distance']):
-                return max_distance
+
+            if (current_user_min_age_preference <= match['user_age'] <= current_user_max_age_preference and
+                match['user_height'] >= current_user_min_height_preference and
+                match['distance'] <= max_distance
+                ):
+                    return max_distance
     
     return 0
-    # if (current_user_min_age_preference <= match['user_age'] <= current_user_max_age_preference and
-    # match['user_height'] >= current_user_min_height_preference and
-    # match['distance'] <= max_distance
-    # ):
-    #     return max_distance
 
 class Match(Resource):
 
@@ -169,10 +192,6 @@ class Match(Resource):
                 result =  get_matches_age_height_distance(current_user_data, response['result'])
 
                 if not result:
-                    current_user_min_age_preference = current_user_data['user_prefer_age_min']
-                    current_user_max_age_preference = current_user_data['user_prefer_age_max']
-                    current_user_min_height_preference = current_user_data['user_prefer_height_min']
-                    current_user_max_distance_preference = current_user_data['user_prefer_distance']
 
                     final_response = {}
                     final_response['message'] = "No results were found. Please try changing preferences using the following suggestions"
@@ -182,16 +201,18 @@ class Match(Resource):
                     height_suggestions = suggest_height(current_user_data, response['result'])
                     distance_suggestions = suggest_distance(current_user_data, response['result'])
 
-                    print(age_min_suggestions, age_max_suggestions, height_suggestions, current_user_min_height_preference)
 
-                    if (age_min_suggestions and (age_min_suggestions != current_user_min_age_preference)):
+                    if (age_min_suggestions):
                         final_response['Set preferred minimum age to'] = age_min_suggestions
-                    if (age_max_suggestions and (age_max_suggestions != current_user_max_age_preference)):
+                    if (age_max_suggestions):
                         final_response['Set preferred maximum age to'] = age_max_suggestions
-                    if (height_suggestions and (height_suggestions != int(current_user_min_height_preference))):
+                    if (height_suggestions):
                         final_response['Set preferred minimum height to'] = height_suggestions
-                    if (distance_suggestions and (distance_suggestions != current_user_max_distance_preference)):
+                    if (distance_suggestions):
                         final_response['Set preferred maximum distance to'] = distance_suggestions
+
+                    if len(final_response.keys()) == 1:
+                        final_response['message'] = "No results were found due to 2 or more preferences"
 
                     return final_response
                 

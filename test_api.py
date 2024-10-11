@@ -5,14 +5,16 @@ import pymysql
 import os
 import datetime
 from decimal import Decimal
+from hashlib import sha256, sha512
 from flask import jsonify, make_response
 
 from dotenv import load_dotenv
 load_dotenv()
 
+# endpointTest_CRON
 
 BASE_URL = "https://41c664jpz1.execute-api.us-west-1.amazonaws.com/dev"
-LOCALHOST_URL = "http://localhost/4000"
+LOGIN_URL = "https://mrle52rri4.execute-api.us-west-1.amazonaws.com/dev/api/v2"
 
 # Connect to MySQL database (API v2)
 def connect():
@@ -243,28 +245,28 @@ class DatabaseConnection:
 # ---------------- Testing Starts from here --------------------
 
 # ******** Userinfo ******** Completed
-# def test_get_userinfo():
+def test_get_userinfo():
 
-#     response = requests.get(BASE_URL + "/userinfo/100-000001")
+    response = requests.get(BASE_URL + "/userinfo/100-000001")
 
-#     assert response.status_code == 200
+    assert response.status_code == 200
 
-# def test_put_userinfo():
+def test_put_userinfo():
 
-#     payload = {
-#             "user_uid": "100-000006",
-#             "user_email_id": "mollysymonds@gmail.com",
-#             "user_first_name": "Molly",
-#             "user_last_name": "Symonds",
-#             "user_notification_preference": "True",
-#             "user_location_service": "True",
-#             "user_date_interests": "Coffee,Lunch,Dinner",
-#             "user_available_time": '[{"day": "Wednesday", "end_time": "06:00 PM", "start_time": "02:00 PM"}, {"day": "Sunday", "end_time": "04:00 PM", "start_time": "01:00 PM"}, {"day": "Saturday", "end_time": "10:00 PM", "start_time": "11:00 AM"}]'
-#             }
+    payload = {
+            "user_uid": "100-000006",
+            "user_email_id": "mollysymonds@gmail.com",
+            "user_first_name": "Molly",
+            "user_last_name": "Symonds",
+            "user_notification_preference": "True",
+            "user_location_service": "True",
+            "user_date_interests": "Coffee,Lunch,Dinner",
+            "user_available_time": '[{"day": "Wednesday", "end_time": "06:00 PM", "start_time": "02:00 PM"}, {"day": "Sunday", "end_time": "04:00 PM", "start_time": "01:00 PM"}, {"day": "Saturday", "end_time": "10:00 PM", "start_time": "11:00 AM"}]'
+            }
 
-#     response = requests.put(BASE_URL + "/userinfo", data=payload)
+    response = requests.put(BASE_URL + "/userinfo", data=payload)
 
-#     assert response.status_code == 200
+    assert response.status_code == 200
 
 # def test_post_userinfo():
 #     payload = {
@@ -284,34 +286,34 @@ class DatabaseConnection:
     
 #     assert response.status_code == 200
 
-# # ******** Likes ******** Completed
-# def test_get_likes():
+# ******** Likes ******** Completed
+def test_get_likes():
 
-#     response = requests.get(BASE_URL + "/likes/100-000001")
+    response = requests.get(BASE_URL + "/likes/100-000001")
 
-#     assert response.status_code == 200
+    assert response.status_code == 200
 
-# def test_post_likes():
+def test_post_likes():
 
-#     payload = {
-#         "liker_user_id": "100-000001",
-#         "liked_user_id": "100-000004"
-#     }
+    payload = {
+        "liker_user_id": "100-000001",
+        "liked_user_id": "100-000004"
+    }
 
-#     response = requests.post(BASE_URL + "/likes", data=payload)
+    response = requests.post(BASE_URL + "/likes", data=payload)
 
-#     assert response.status_code == 200
+    assert response.status_code == 200
 
-# def test_delete_likes():
+def test_delete_likes():
 
-#     payload = {
-#         "liker_user_id": "100-000001",
-#         "liked_user_id": "100-000004"
-#     }
+    payload = {
+        "liker_user_id": "100-000001",
+        "liked_user_id": "100-000004"
+    }
 
-#     response = requests.delete(BASE_URL + "/likes", data=payload)
+    response = requests.delete(BASE_URL + "/likes", data=payload)
 
-#     assert response.status_code == 200
+    assert response.status_code == 200
 
 # ******** Meet ******** Completed
 def test_get_meet():
@@ -342,46 +344,115 @@ def test_post_meet():
     assert response.status_code == 200
 
 # ******** Lists ******** Completed
-# def test_get_lists():
+def test_get_lists():
 
-#     response = requests.get(BASE_URL + "/lists?list_category=activities")
+    response = requests.get(BASE_URL + "/lists?list_category=activities")
 
-#     assert response.status_code == 200
+    assert response.status_code == 200
 
-# ******** Messages ********
-# def test_get_messages():
+# ******** Messages ******** Completed
+def test_get_messages():
 
-#     response = requests.get(BASE_URL + "/messages?sender_id=100-000001&receiver_id=100-000007")
+    response = requests.get(BASE_URL + "/messages?sender_id=100-000001&receiver_id=100-000007")
 
-#     assert response.status_code == 200
+    assert response.status_code == 200
 
-# def test_post_message():
+def test_post_message():
 
-#     payload = {
-#         "sender_id": "100-000001",
-#         "receiver_id": "100-000002",
-#         "message_content": "Hi, There"
-#     }
+    payload = {
+        "sender_id": "100-000001",
+        "receiver_id": "100-000002",
+        "message_content": "Hi, There"
+    }
 
-#     headers = {
-#         'Content-Type': 'application/json'
-#     }
+    headers = {
+        'Content-Type': 'application/json'
+    }
     
-#     response = requests.post(BASE_URL + "/messages", data=json.dumps(payload), headers=headers)
+    response = requests.post(BASE_URL + "/messages", data=json.dumps(payload), headers=headers)
     
-#     # delete = response.json()
+    delete = response.json()
 
-#     # with connect() as db:
-#     #     query = f'''DELETE FROM mmu.messages
-#     #             WHERE message_uid="{delete['message_uid']}"'''
+    with connect() as db:
+        query = f'''DELETE FROM mmu.messages
+                WHERE message_uid="{delete['message_uid']}"'''
 
-#     #     result = db.delete(query)
+        result = db.delete(query)
 
-#     assert response.status_code == 200
+    assert response.status_code == 200
 
-# def test_get_matches():
+# ******** Matches ******** Completed
+def test_get_matches():
     
     response = requests.get(BASE_URL + "/matches/100-000001")
 
     assert response.status_code == 200
 
+# ******** Login ******** Completed
+user_uid = ""
+
+def test_create_account():
+    payload = {
+            "email": "testapi@gmail.com",
+            "password": "123",
+            "phone_number": "(408) 679-4332"
+        }
+
+    headers = {
+        'Content-Type': 'application/json'
+    }
+
+    response = requests.post(LOGIN_URL + "/CreateAccount/MMU", data=json.dumps(payload), headers=headers)
+    delete = response.json()
+
+    global user_uid
+    user_uid = delete['result'][0]['user_uid']
+
+    assert response.status_code == 200
+
+def test_email_login():
+    payload = {
+        "email": "testapi@gmail.com",
+        "password": "123"
+    }
+    headers = {
+        'Content-Type': 'application/json'
+    }
+
+    response = requests.post(LOGIN_URL + "/AccountSalt/MMU", data=json.dumps(payload), headers=headers)
+
+    method = response.json()
+
+    assert response.status_code == 200
+
+    print(' Now In Login Part')
+
+    def getHash(value):
+        base = str(value).encode()
+        return sha256(base).hexdigest()
+    
+    def createHash(password, salt):
+        return getHash(password+salt)
+    
+    password = createHash(payload["password"], method["result"][0]["password_salt"])
+
+    payload = {
+        "email": "testapi@gmail.com",
+        "password": password
+    }
+    response = requests.post(LOGIN_URL + "/Login/MMU", data=json.dumps(payload), headers=headers)
+
+    global user_uid
+    with connect() as db:
+        query = f'''DELETE FROM mmu.users
+                WHERE user_uid="{user_uid}"'''
+
+        result = db.delete(query)
+    
+    assert response.status_code == 200
+
+# ******** Announcements ******** Completed
+def test_get_announcements():
+    response = requests.get(BASE_URL + "/announcements/100-000002")
+
+    assert response.status_code == 200
