@@ -241,7 +241,6 @@ class DatabaseConnection:
             print(e)
         return response
 
-
 # ---------------- Testing Starts from here --------------------
 
 # ******** Userinfo ******** Completed
