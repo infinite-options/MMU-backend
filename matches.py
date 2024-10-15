@@ -194,7 +194,7 @@ class Match(Resource):
                 if not result:
 
                     final_response = {}
-                    final_response['message'] = "No results were found. Please try changing preferences using the following suggestions"
+                    final_response['message'] = "No matches found"
 
                     age_min_suggestions = suggest_age_min(current_user_data, response['result'])
                     age_max_suggestions = suggest_age_max(current_user_data, response['result'])
@@ -203,16 +203,20 @@ class Match(Resource):
 
 
                     if (age_min_suggestions):
-                        final_response['Set preferred minimum age to'] = age_min_suggestions
+                        final_response['Lower minimum age'] = age_min_suggestions
                     if (age_max_suggestions):
-                        final_response['Set preferred maximum age to'] = age_max_suggestions
+                        final_response['Raise maximum age'] = age_max_suggestions
                     if (height_suggestions):
-                        final_response['Set preferred minimum height to'] = height_suggestions
+                        final_response['Lower minimum height'] = height_suggestions
                     if (distance_suggestions):
-                        final_response['Set preferred maximum distance to'] = distance_suggestions
+                        final_response['Raise maximum distance'] = distance_suggestions
 
                     if len(final_response.keys()) == 1:
-                        final_response['message'] = "No results were found due to 2 or more preferences"
+                        final_response['message'] = "No matches found"
+                        final_response['Lower minimum age'] = "No matches found"
+                        final_response['Raise maximum age'] = "No matches found"
+                        final_response['Lower minimum height'] = "No matches found"
+                        final_response['Raise maximum distance'] = "No matches found"
 
                     return final_response
                 
