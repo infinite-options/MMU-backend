@@ -850,7 +850,7 @@ def endpointTest_CRON():
             "user_available_time": '[{"day": "Wednesday", "end_time": "06:00 PM", "start_time": "02:00 PM"}, {"day": "Sunday", "end_time": "04:00 PM", "start_time": "01:00 PM"}, {"day": "Saturday", "end_time": "10:00 PM", "start_time": "11:00 AM"}]'
         }
         put_userinfo_response = requests.put(BASE_URL + "/userinfo", data=put_userinfo_payload)
-        assert put_userinfo_response.status_code == 201
+        assert put_userinfo_response.status_code == 200
         count += 1
 
         # -------- Likes --------
@@ -882,7 +882,7 @@ def endpointTest_CRON():
     
     except:
         try:
-            message_content = f"Hello,\n\nDate/Time: {dt}. \nThere was some error while running Endpoint Test CRONJOB"
+            message_content = f"Hello,\n\nDate/Time: {dt}. \nThere was some error while running Endpoint Test CRONJOB. No of tests: {count}"
             # SendEmail_CLASS().get(message_content)
             SendEmail_CRON(message_content)
             return jsonify({
