@@ -574,153 +574,183 @@ class endpointTest_CLASS(Resource):
             print("Response Code: ", get_userinfo_response.status_code)
             count += 1
 
-            # put_userinfo_payload = {
-            #     "user_uid": "100-000006",
-            #     "user_email_id": "mollysymonds@gmail.com",
-            #     "user_first_name": "Molly",
-            #     "user_last_name": "Symonds",
-            #     "user_notification_preference": "True",
-            #     "user_location_service": "True",
-            #     "user_date_interests": "Coffee,Lunch,Dinner",
-            #     "user_available_time": '[{"day": "Wednesday", "end_time": "06:00 PM", "start_time": "02:00 PM"}, {"day": "Sunday", "end_time": "04:00 PM", "start_time": "01:00 PM"}, {"day": "Saturday", "end_time": "10:00 PM", "start_time": "11:00 AM"}]'
-            # }
-            # put_userinfo_response = requests.put(BASE_URL + "/userinfo", data=put_userinfo_payload)
+            put_userinfo_payload = {
+                "user_uid": "100-000006",
+                "user_email_id": "mollysymonds@gmail.com",
+                "user_first_name": "Molly",
+                "user_last_name": "Symonds",
+                "user_notification_preference": "True",
+                "user_location_service": "True",
+                "user_date_interests": "Coffee,Lunch,Dinner",
+                "user_available_time": '[{"day": "Wednesday", "end_time": "06:00 PM", "start_time": "02:00 PM"}, {"day": "Sunday", "end_time": "04:00 PM", "start_time": "01:00 PM"}, {"day": "Saturday", "end_time": "10:00 PM", "start_time": "11:00 AM"}]'
+            }
+            put_userinfo_response = requests.put(BASE_URL + "/userinfo", data=put_userinfo_payload)
             # assert put_userinfo_response.status_code == 201
-            # count += 1
+            count += 1
 
             # # -------- Likes --------
-            # get_likes_response = requests.get(BASE_URL + "/likes/100-000001")
+            get_likes_response = requests.get(BASE_URL + "/likes/100-000001")
             # assert get_likes_response.status_code == 200
-            # count += 1
+            count += 1
 
-            # post_likes_payload = {
-            #     "liker_user_id": "100-000001",
-            #     "liked_user_id": "100-000004"
-            # }
-            # post_likes_response = requests.post(BASE_URL + "/likes", data=post_likes_payload)
+            post_likes_payload = {
+                "liker_user_id": "100-000001",
+                "liked_user_id": "100-000004"
+            }
+            post_likes_response = requests.post(BASE_URL + "/likes", data=post_likes_payload)
             # assert post_likes_response.status_code == 200
-            # count += 1
+            count += 1
+
+            delete_likes_payload = {
+                "liker_user_id": "100-000001",
+                "liked_user_id": "100-000004"
+            }
+            delete_likes_response = requests.delete(BASE_URL + "/likes", data=delete_likes_payload)
+            # assert response.status_code == 200
+            count += 1
+
+            get_meet_response = requests.get(BASE_URL + "/meet/100-000001")
+            # assert get_meet_response.status_code == 200
+            count += 1
+
+            post_meet_payload = {
+                "meet_user_id": "100-000001",
+                "meet_date_user_id": "100-000004",
+                "meet_day": "Saturday",
+                "meet_time": "7:00 AM"
+            }
+            
+            post_meet_response = requests.post(BASE_URL + "/meet", data=post_meet_payload)
+            post_meet_delete = post_meet_response.json()
+            with connect() as db:
+                query = f'''DELETE FROM mmu.meet
+                        WHERE meet_uid="{post_meet_delete['meet_uid']}"'''
+                result = db.delete(query)
+            # assert post_meet_response.status_code == 200
+            count += 1
 
             print(" \n\n Successfully ran test APIs \n\n ")
 
             try:
                 message_content = f"Hello,\n\nDate/Time: {dt}. \nEndpoint Test CRONJOB ran successfully. No of tests: {count}"
-                # SendEmail_CLASS().get(message_content)
+
                 SendEmail_CRON(message_content)
 
                 response["email"] = {'message': f'EndpointTest CRON Job Email for {dt} sent!' ,
                         'code': 500}
-                # return jsonify({
-
-                #     "message": f"Date/Time: {dt}. Endpoint Test CRONJOB ran successfully. No of tests: {count}"
-                # })
             except:
-                # return jsonify({
-                #     "message": f"Date/Time: {dt}. Endpoint Test CRONJOB ran successfully. Error in sending the email"
-                # })
                 response["email fail"] = {'message': f'EndpointTest CRON Job Email for {dt} could not be sent' ,
                         'code': 500}
         
         except:
             try:
                 message_content = f"Hello,\n\nDate/Time: {dt}. \nThere was some error while running Endpoint Test CRONJOB"
-                # SendEmail_CLASS().get(message_content)
+
                 SendEmail_CRON(message_content)
 
                 response["email"] = {'message': f'EndpointTest CRON Job Fail Email for {dt} sent!' ,
                         'code': 500}
-                # return jsonify({
-                #     "message": f"Date/Time: {dt}. There was some error while running Endpoint Test CRONJOB. No of tests: {count}"
-                # })
             except:
                 response["email fail"] = {'message': f'EndpointTest CRON Job Fail Email for {dt} could not be sent' ,
                         'code': 500}
-                # return jsonify({
-                #     "message": f"Today's date/time: {dt}. There was some error while running Endpoint Test CRONJOB. Error in sending the email. No of tests: {count}"
-                # })
         return response
             
 def endpointTest_CRON():
-        print("In endpointTest CRON")
-        BASE_URL = "https://41c664jpz1.execute-api.us-west-1.amazonaws.com/dev"
-        LOGIN_URL = "https://mrle52rri4.execute-api.us-west-1.amazonaws.com/dev/api/v2"
-        dt = datetime.now()
-        response = {}
-        count = 0
+    print("In endpointTest CRON")
+    BASE_URL = "https://41c664jpz1.execute-api.us-west-1.amazonaws.com/dev"
+    LOGIN_URL = "https://mrle52rri4.execute-api.us-west-1.amazonaws.com/dev/api/v2"
+    dt = datetime.now()
+    response = {}
+    count = 0
+
+    try:
+
+        # -------- Userinfo --------
+        get_userinfo_response = requests.get(BASE_URL + "/userinfo/100-000001")
+        # assert get_userinfo_response.status_code == 200
+        print("Response Code: ", get_userinfo_response.status_code)
+        count += 1
+
+        put_userinfo_payload = {
+            "user_uid": "100-000006",
+            "user_email_id": "mollysymonds@gmail.com",
+            "user_first_name": "Molly",
+            "user_last_name": "Symonds",
+            "user_notification_preference": "True",
+            "user_location_service": "True",
+            "user_date_interests": "Coffee,Lunch,Dinner",
+            "user_available_time": '[{"day": "Wednesday", "end_time": "06:00 PM", "start_time": "02:00 PM"}, {"day": "Sunday", "end_time": "04:00 PM", "start_time": "01:00 PM"}, {"day": "Saturday", "end_time": "10:00 PM", "start_time": "11:00 AM"}]'
+        }
+        put_userinfo_response = requests.put(BASE_URL + "/userinfo", data=put_userinfo_payload)
+        # assert put_userinfo_response.status_code == 201
+        count += 1
+
+        # # -------- Likes --------
+        get_likes_response = requests.get(BASE_URL + "/likes/100-000001")
+        # assert get_likes_response.status_code == 200
+        count += 1
+
+        post_likes_payload = {
+            "liker_user_id": "100-000001",
+            "liked_user_id": "100-000004"
+        }
+        post_likes_response = requests.post(BASE_URL + "/likes", data=post_likes_payload)
+        # assert post_likes_response.status_code == 200
+        count += 1
+
+        delete_likes_payload = {
+            "liker_user_id": "100-000001",
+            "liked_user_id": "100-000004"
+        }
+        delete_likes_response = requests.delete(BASE_URL + "/likes", data=delete_likes_payload)
+        # assert response.status_code == 200
+        count += 1
+
+        get_meet_response = requests.get(BASE_URL + "/meet/100-000001")
+        # assert get_meet_response.status_code == 200
+        count += 1
+
+        post_meet_payload = {
+            "meet_user_id": "100-000001",
+            "meet_date_user_id": "100-000004",
+            "meet_day": "Saturday",
+            "meet_time": "7:00 AM"
+        }
+        
+        post_meet_response = requests.post(BASE_URL + "/meet", data=post_meet_payload)
+        post_meet_delete = post_meet_response.json()
+        with connect() as db:
+            query = f'''DELETE FROM mmu.meet
+                    WHERE meet_uid="{post_meet_delete['meet_uid']}"'''
+            result = db.delete(query)
+        # assert post_meet_response.status_code == 200
+        count += 1
+
+        print(" \n\n Successfully ran test APIs \n\n ")
 
         try:
+            message_content = f"Hello,\n\nDate/Time: {dt}. \nEndpoint Test CRONJOB ran successfully. No of tests: {count}"
 
-            # -------- Userinfo --------
-            get_userinfo_response = requests.get(BASE_URL + "/userinfo/100-000001")
-            # assert get_userinfo_response.status_code == 200
-            print("Response Code: ", get_userinfo_response.status_code)
-            count += 1
+            SendEmail_CRON(message_content)
 
-            # put_userinfo_payload = {
-            #     "user_uid": "100-000006",
-            #     "user_email_id": "mollysymonds@gmail.com",
-            #     "user_first_name": "Molly",
-            #     "user_last_name": "Symonds",
-            #     "user_notification_preference": "True",
-            #     "user_location_service": "True",
-            #     "user_date_interests": "Coffee,Lunch,Dinner",
-            #     "user_available_time": '[{"day": "Wednesday", "end_time": "06:00 PM", "start_time": "02:00 PM"}, {"day": "Sunday", "end_time": "04:00 PM", "start_time": "01:00 PM"}, {"day": "Saturday", "end_time": "10:00 PM", "start_time": "11:00 AM"}]'
-            # }
-            # put_userinfo_response = requests.put(BASE_URL + "/userinfo", data=put_userinfo_payload)
-            # assert put_userinfo_response.status_code == 201
-            # count += 1
-
-            # # -------- Likes --------
-            # get_likes_response = requests.get(BASE_URL + "/likes/100-000001")
-            # assert get_likes_response.status_code == 200
-            # count += 1
-
-            # post_likes_payload = {
-            #     "liker_user_id": "100-000001",
-            #     "liked_user_id": "100-000004"
-            # }
-            # post_likes_response = requests.post(BASE_URL + "/likes", data=post_likes_payload)
-            # assert post_likes_response.status_code == 200
-            # count += 1
-
-            print(" \n\n Successfully ran test APIs \n\n ")
-
-            try:
-                message_content = f"Hello,\n\nDate/Time: {dt}. \nEndpoint Test CRONJOB ran successfully. No of tests: {count}"
-                # SendEmail_CLASS().get(message_content)
-                SendEmail_CRON(message_content)
-
-                response["email"] = {'message': f'EndpointTest CRON Job Email for {dt} sent!' ,
-                        'code': 500}
-                # return jsonify({
-
-                #     "message": f"Date/Time: {dt}. Endpoint Test CRONJOB ran successfully. No of tests: {count}"
-                # })
-            except:
-                # return jsonify({
-                #     "message": f"Date/Time: {dt}. Endpoint Test CRONJOB ran successfully. Error in sending the email"
-                # })
-                response["email fail"] = {'message': f'EndpointTest CRON Job Email for {dt} could not be sent' ,
-                        'code': 500}
-        
+            response["email"] = {'message': f'EndpointTest CRON Job Email for {dt} sent!' ,
+                    'code': 500}
         except:
-            try:
-                message_content = f"Hello,\n\nDate/Time: {dt}. \nThere was some error while running Endpoint Test CRONJOB"
-                # SendEmail_CLASS().get(message_content)
-                SendEmail_CRON(message_content)
+            response["email fail"] = {'message': f'EndpointTest CRON Job Email for {dt} could not be sent' ,
+                    'code': 500}
+    
+    except:
+        try:
+            message_content = f"Hello,\n\nDate/Time: {dt}. \nThere was some error while running Endpoint Test CRONJOB. No of tests: {count}"
 
-                response["email"] = {'message': f'EndpointTest CRON Job Fail Email for {dt} sent!' ,
-                        'code': 500}
-                # return jsonify({
-                #     "message": f"Date/Time: {dt}. There was some error while running Endpoint Test CRONJOB. No of tests: {count}"
-                # })
-            except:
-                response["email fail"] = {'message': f'EndpointTest CRON Job Fail Email for {dt} could not be sent' ,
-                        'code': 500}
-                # return jsonify({
-                #     "message": f"Today's date/time: {dt}. There was some error while running Endpoint Test CRONJOB. Error in sending the email. No of tests: {count}"
-                # })
-        return response
+            SendEmail_CRON(message_content)
+
+            response["email"] = {'message': f'EndpointTest CRON Job Fail Email for {dt} sent!' ,
+                    'code': 500}
+        except:
+            response["email fail"] = {'message': f'EndpointTest CRON Job Fail Email for {dt} could not be sent' ,
+                    'code': 500}
+    return response
 
 # def endpointTest_CRON():
 
