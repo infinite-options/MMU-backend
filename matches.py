@@ -13,8 +13,8 @@ def get_matches_sexuality_open_to(current_user_data, user_uid):
 
         current_user_open_to = ast.literal_eval(current_user_data['user_open_to'])
         current_user_open_to = ', '.join(f"'{item}'" for item in current_user_open_to)
-        if not current_user_prefer_gender or current_user_prefer_gender is None:
-            current_user_prefer_gender = "'Male','Female','Non-Binary'"
+        if not current_user_prefer_gender or current_user_prefer_gender is None or current_user_prefer_gender == "Either":
+            current_user_prefer_gender = "'Male','Female'"
         else:
             current_user_prefer_gender = f"'{current_user_prefer_gender}'"
         
@@ -232,7 +232,7 @@ class Match(Resource):
                 
                 if not final_result:
                     return jsonify({
-                        "message": "No result found because of 2 way matching",
+                        "message": "No matches found because of 2 way matching",
                         "result of 1 way match": result
                     })
                 else:
