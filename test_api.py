@@ -382,9 +382,36 @@ def test_post_message():
 
 # ******** Matches ******** Completed
 def test_get_matches():
-    
     response = requests.get(BASE_URL + "/matches/100-000001")
+    assert response.status_code == 200
 
+def test_get_matches_with_preferences():
+    # Test with a user that has specific preferences
+    test_user_id = "100-000002"  # Using a different test user
+    response = requests.get(BASE_URL + f"/matches/{test_user_id}")
+    
+    assert response.status_code == 200
+    
+    # Verify the response structure
+    data = response.json()
+    if 'result' in data:
+        for match in data['result']:
+            # Verify all required fields are present
+            assert 'user_body_composition' in match
+            assert 'user_smoking' in match
+            assert 'user_drinking' in match
+            assert 'user_religion' in match
+            assert 'user_kids' in match
+            
+            # Verify distance is calculated
+            assert 'distance' in match
+            assert isinstance(match['distance'], (int, float))
+
+def test_get_matches_no_preferences():
+    # Test with a user that has no specific preferences (should still work)
+    test_user_id = "100-000003"  # Using another test user
+    response = requests.get(BASE_URL + f"/matches/{test_user_id}")
+    
     assert response.status_code == 200
 
 # ******** Login ******** Completed
