@@ -61,8 +61,6 @@ jobs:
             echo "Installing dependencies..."
             pip3 install -r requirements.txt --no-deps
             nohup python3 mmu_api.py >> mmu.log 2>&1 &
-            cd ..
-            deactivate
             echo "Application started"
             exit 0
           EOF
