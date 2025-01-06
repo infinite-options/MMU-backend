@@ -826,6 +826,6 @@ class test_endpoint_CLASS(Resource):
 
 # # ******** Announcements ******** Completed
 # def test_get_announcements():
-    response = requests.get(BASE_URL + "/announcements/100-000002")
+    # response = requests.get(BASE_URL + "/announcements/100-000002")
 
-    assert response.status_code == 200
+    # assert response.status_code == 200
