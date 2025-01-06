@@ -22,6 +22,7 @@ from messages import Messages, get_conversation_id
 from data import connect, disconnect
 from announcements import Announcements
 from password import Password
+from test_api import test_endpoint_CLASS
 from s3 import uploadImage, s3
 
 import os
@@ -557,430 +558,525 @@ class stripe_key(Resource):
 
 # -- MMU CRON ENDPOINTS start here -------------------------------------------------------------------------------
 
-class endpointTest_CLASS(Resource):
+# class endpointTest_CLASS(Resource):
     
-    def get(self):
-        print("In endpointTest CRON")
-        BASE_URL = "https://41c664jpz1.execute-api.us-west-1.amazonaws.com/dev"
-        LOGIN_URL = "https://mrle52rri4.execute-api.us-west-1.amazonaws.com/dev/api/v2"
-        dt = datetime.now()
-        response = {}
-        count = 0
-        api_list_failed = []
-        api_list_successful = []
+#     def get(self):
+#         print("In endpointTest CRON")
+#         BASE_URL = "https://41c664jpz1.execute-api.us-west-1.amazonaws.com/dev"
+#         LOGIN_URL = "https://mrle52rri4.execute-api.us-west-1.amazonaws.com/dev/api/v2"
+#         dt = datetime.now()
+#         response = {}
+#         count = 0
+#         api_list_failed = []
+#         api_list_successful = []
 
-        try:
-            with connect() as db:
+#         try:
+#             with connect() as db:
 
-                # ******** Userinfo ********
-                get_userinfo_response = requests.get(BASE_URL + "/userinfo/100-000001")
-                if not (get_userinfo_response.status_code == 200):
-                    api_list_failed.append('Get UserInfo API')
-                else:
-                    api_list_successful.append('Get UserInfo API')
-                count += 1
+#                 # ******** Userinfo ********
+#                 print("\nIn UserInfo")
+#                 get_userinfo_response = requests.get(BASE_URL + "/userinfo/100-000001")
+#                 if not (get_userinfo_response.status_code == 200):
+#                     api_list_failed.append('Get UserInfo API')
+#                 else:
+#                     api_list_successful.append('Get UserInfo API')
+#                 count += 1
 
-                put_userinfo_payload = {
-                    "user_uid": "100-000006",
-                    "user_email_id": "mollysymonds@gmail.com",
-                    "user_first_name": "Molly",
-                    "user_last_name": "Symonds",
-                    "user_notification_preference": "True",
-                    "user_location_service": "True",
-                    "user_date_interests": "Coffee,Lunch,Dinner",
-                    "user_available_time": '[{"day": "Wednesday", "end_time": "06:00 PM", "start_time": "02:00 PM"}, {"day": "Sunday", "end_time": "04:00 PM", "start_time": "01:00 PM"}, {"day": "Saturday", "end_time": "10:00 PM", "start_time": "11:00 AM"}]'
-                }
-                put_userinfo_response = requests.put(BASE_URL + "/userinfo", data=put_userinfo_payload)
-                if not (put_userinfo_response.status_code == 200):
-                    api_list_failed.append('Put UserInfo API')
-                else:
-                    api_list_successful.append('Put UserInfo API')
-                count += 1
+#                 put_userinfo_payload = {
+#                     "user_uid": "100-000006",
+#                     "user_email_id": "mollysymonds@gmail.com",
+#                     "user_first_name": "Molly",
+#                     "user_last_name": "Symonds",
+#                     "user_notification_preference": "True",
+#                     "user_location_service": "True",
+#                     "user_date_interests": "Coffee,Lunch,Dinner",
+#                     "user_available_time": '[{"day": "Wednesday", "end_time": "06:00 PM", "start_time": "02:00 PM"}, {"day": "Sunday", "end_time": "04:00 PM", "start_time": "01:00 PM"}, {"day": "Saturday", "end_time": "10:00 PM", "start_time": "11:00 AM"}]'
+#                 }
+#                 put_userinfo_response = requests.put(BASE_URL + "/userinfo", data=put_userinfo_payload)
+#                 if not (put_userinfo_response.status_code == 200):
+#                     api_list_failed.append('Put UserInfo API')
+#                 else:
+#                     api_list_successful.append('Put UserInfo API')
+#                 count += 1
 
-                # ******** Likes ********
-                get_likes_response = requests.get(BASE_URL + "/likes/100-000001")
-                if not (get_likes_response.status_code == 200):
-                    api_list_failed.append('Get likes API')
-                else:
-                    api_list_successful.append('Get likes API')
-                count += 1
+#                 # ******** Likes ********
+#                 print("\nIn Likes")
+#                 get_likes_response = requests.get(BASE_URL + "/likes/100-000001")
+#                 if not (get_likes_response.status_code == 200):
+#                     api_list_failed.append('Get likes API')
+#                 else:
+#                     api_list_successful.append('Get likes API')
+#                 count += 1
 
-                post_likes_payload = {
-                    "liker_user_id": "100-000001",
-                    "liked_user_id": "100-000004"
-                }
-                post_likes_response = requests.post(BASE_URL + "/likes", data=post_likes_payload)
-                if not (post_likes_response.status_code == 200):
-                    api_list_failed.append('Post Likes API')
-                else:
-                    api_list_successful.append('Post Likes API')
-                count += 1
+#                 post_likes_payload = {
+#                     "liker_user_id": "100-000001",
+#                     "liked_user_id": "100-000004"
+#                 }
+#                 post_likes_response = requests.post(BASE_URL + "/likes", data=post_likes_payload)
+#                 if not (post_likes_response.status_code == 200):
+#                     api_list_failed.append('Post Likes API')
+#                 else:
+#                     api_list_successful.append('Post Likes API')
+#                 count += 1
 
-                delete_likes_payload = {
-                    "liker_user_id": "100-000001",
-                    "liked_user_id": "100-000004"
-                }
-                delete_likes_response = requests.delete(BASE_URL + "/likes", data=delete_likes_payload)
-                if not (delete_likes_response.status_code == 200):
-                    api_list_failed.append('Delete Likes API')
-                else:
-                    api_list_successful.append('Delete Likes API')
-                count += 1
+#                 delete_likes_payload = {
+#                     "liker_user_id": "100-000001",
+#                     "liked_user_id": "100-000004"
+#                 }
+#                 delete_likes_response = requests.delete(BASE_URL + "/likes", data=delete_likes_payload)
+#                 if not (delete_likes_response.status_code == 200):
+#                     api_list_failed.append('Delete Likes API')
+#                 else:
+#                     api_list_successful.append('Delete Likes API')
+#                 count += 1
 
-                # ******** Meet ********
-                get_meet_response = requests.get(BASE_URL + "/meet/100-000001")
-                if not (get_meet_response.status_code == 200):
-                    api_list_failed.append('Get Meet API')
-                else:
-                    api_list_successful.append('Get Meet API')
-                count += 1
+#                 # ******** Meet ********
+#                 print("\nIn Meet")
+#                 get_meet_response = requests.get(BASE_URL + "/meet/100-000001")
+#                 if not (get_meet_response.status_code == 200):
+#                     api_list_failed.append('Get Meet API')
+#                 else:
+#                     api_list_successful.append('Get Meet API')
+#                 count += 1
 
-                post_meet_payload = {
-                    "meet_user_id": "100-000001",
-                    "meet_date_user_id": "100-000004",
-                    "meet_day": "Saturday",
-                    "meet_time": "7:00 AM"
-                }
-                post_meet_response = requests.post(BASE_URL + "/meet", data=post_meet_payload)
-                post_meet_delete = post_meet_response.json()
-                query = f'''DELETE FROM mmu.meet
-                        WHERE meet_uid="{post_meet_delete['meet_uid']}"'''
-                result = db.delete(query)
-                if not (post_meet_response.status_code == 200):
-                    api_list_failed.append('Post Meet API')
-                else:
-                    api_list_successful.append('Post Meet API')
-                count += 1
+#                 post_meet_payload = {
+#                     "meet_user_id": "100-000001",
+#                     "meet_date_user_id": "100-000004",
+#                     "meet_day": "Saturday",
+#                     "meet_time": "7:00 AM"
+#                 }
+#                 post_meet_response = requests.post(BASE_URL + "/meet", data=post_meet_payload)
+#                 post_meet_delete = post_meet_response.json()
+#                 query = f'''DELETE FROM mmu.meet
+#                         WHERE meet_uid="{post_meet_delete['meet_uid']}"'''
+#                 result = db.delete(query)
+#                 if not (post_meet_response.status_code == 200):
+#                     api_list_failed.append('Post Meet API')
+#                 else:
+#                     api_list_successful.append('Post Meet API')
+#                 count += 1
 
-                # ******** Lists ********
-                get_lists_response = requests.get(BASE_URL + "/lists?list_category=activities")
-                if not (get_lists_response.status_code == 200):
-                    api_list_failed.append('Get Lists API')
-                else:
-                    api_list_successful.append('Get Lists API')
-                count += 1
+#                 # ******** Lists ********
+#                 print("\nIn Lists")
+#                 get_lists_response = requests.get(BASE_URL + "/lists?list_category=activities")
+#                 if not (get_lists_response.status_code == 200):
+#                     api_list_failed.append('Get Lists API')
+#                 else:
+#                     api_list_successful.append('Get Lists API')
+#                 count += 1
 
-                # ******** Messages ********
-                get_messages_response = requests.get(BASE_URL + "/messages?sender_id=100-000001&receiver_id=100-000007")
-                if not (get_messages_response.status_code == 200):
-                    api_list_failed.append('Get Messages API')
-                else:
-                    api_list_successful.append('Get Messages API')
-                count += 1
+#                 # ******** Messages ********
+#                 print("\nIn Messages")
+#                 get_messages_response = requests.get(BASE_URL + "/messages?sender_id=100-000001&receiver_id=100-000007")
+#                 if not (get_messages_response.status_code == 200):
+#                     api_list_failed.append('Get Messages API')
+#                 else:
+#                     api_list_successful.append('Get Messages API')
+#                 count += 1
 
-                post_messages_payload = {
-                    "sender_id": "100-000001",
-                    "receiver_id": "100-000002",
-                    "message_content": "Hi, There"
-                }
-                headers = {
-                    'Content-Type': 'application/json'
-                }
-                post_messages_response = requests.post(BASE_URL + "/messages", data=json.dumps(post_messages_payload), headers=headers)
-                delete = post_messages_response.json()
-                query = f'''DELETE FROM mmu.messages
-                        WHERE message_uid="{delete['message_uid']}"'''
-                result = db.delete(query)
-                if not (post_messages_response.status_code == 200):
-                    api_list_failed.append('Post Messages API')
-                else:
-                    api_list_successful.append('Post Messages API')
-                count += 1
+#                 post_messages_payload = {
+#                     "sender_id": "100-000001",
+#                     "receiver_id": "100-000002",
+#                     "message_content": "Hi, There"
+#                 }
+#                 headers = {
+#                     'Content-Type': 'application/json'
+#                 }
+#                 post_messages_response = requests.post(BASE_URL + "/messages", data=json.dumps(post_messages_payload), headers=headers)
+#                 delete = post_messages_response.json()
+#                 query = f'''DELETE FROM mmu.messages
+#                         WHERE message_uid="{delete['message_uid']}"'''
+#                 result = db.delete(query)
+#                 if not (post_messages_response.status_code == 200):
+#                     api_list_failed.append('Post Messages API')
+#                 else:
+#                     api_list_successful.append('Post Messages API')
+#                 count += 1
 
-                # ******** Matches ********
-                get_matches_response = requests.get(BASE_URL + "/matches/100-000001")
-                if not (get_matches_response.status_code == 200):
-                    api_list_failed.append('Get Matches API')
-                else:
-                    api_list_successful.append('Get Matches API')
-                count += 1
+#                 # ******** Matches ********
+#                 print("\nIn Matches")
+#                 get_matches_response = requests.get(BASE_URL + "/matches/100-000001")
+#                 if not (get_matches_response.status_code == 200):
+#                     api_list_failed.append('Get Matches API')
+#                 else:
+#                     api_list_successful.append('Get Matches API')
+#                 count += 1
                 
-                # ******** Login ********
-                user_uid = ""
-                create_account_payload = {
-                        "email": "testapi@gmail.com",
-                        "password": "123",
-                        "phone_number": "(408) 679-4332"
-                    }
-                create_account_response = requests.post(LOGIN_URL + "/CreateAccount/MMU", data=json.dumps(create_account_payload), headers=headers)
-                delete = create_account_response.json()
-                user_uid = delete['result'][0]['user_uid']
-                if not (create_account_response.status_code == 200):
-                    api_list_failed.append('Create Account API')
-                else:
-                    api_list_successful.append('Create Account API')
-                count += 1
+#                 # ******** Login ********
+#                 print("\nIn Login")
+#                 user_uid = ""
+#                 create_account_payload = {
+#                         "email": "testapi1@gmail.com",
+#                         "password": "123",
+#                         "phone_number": "(408) 679-4332"
+#                     }
+#                 create_account_response = requests.post(LOGIN_URL + "/CreateAccount/MMU", data=json.dumps(create_account_payload), headers=headers)
+#                 delete = create_account_response.json()
+#                 user_uid = delete['result'][0]['user_uid']
+#                 if not (create_account_response.status_code == 200):
+#                     api_list_failed.append('Create Account API')
+#                 else:
+#                     api_list_successful.append('Create Account API')
+#                 count += 1
 
-                account_salt_payload = {
-                    "email": "testapi@gmail.com",
-                    "password": "123"
-                }
-                account_salt_response = requests.post(LOGIN_URL + "/AccountSalt/MMU", data=json.dumps(account_salt_payload), headers=headers)
-                if not (account_salt_response.status_code == 200):
-                    api_list_failed.append("Account Salt API")
-                else:
-                    print(' Now In Login Part')
-                    api_list_successful.append('Account Salt API')
-                    method = account_salt_response.json()
-                    def getHash(value):
-                        base = str(value).encode()
-                        return sha256(base).hexdigest()
-                    def createHash(password, salt):
-                        return getHash(password+salt)
-                    password = createHash(account_salt_payload["password"], method["result"][0]["password_salt"])
-                    email_login_payload = {
-                        "email": "testapi@gmail.com",
-                        "password": password
-                    }
-                    email_login_response = requests.post(LOGIN_URL + "/Login/MMU", data=json.dumps(email_login_payload), headers=headers)
-                    query = f'''DELETE FROM mmu.users
-                            WHERE user_uid="{user_uid}"'''
-                    result = db.delete(query)
-                    if not (email_login_response.status_code == 200):
-                        api_list_failed.append('Email Login API')
-                    else:
-                        api_list_successful.append('Email Login API')
-                count += 1
+#                 account_salt_payload = {
+#                     "email": "testapi@gmail.com",
+#                     "password": "123"
+#                 }
+#                 account_salt_response = requests.post(LOGIN_URL + "/AccountSalt/MMU", data=json.dumps(account_salt_payload), headers=headers)
+#                 if not (account_salt_response.status_code == 200):
+#                     api_list_failed.append("Account Salt API")
+#                 else:
+#                     print(' Now In Login Part')
+#                     api_list_successful.append('Account Salt API')
+#                     method = account_salt_response.json()
+#                     def getHash(value):
+#                         base = str(value).encode()
+#                         return sha256(base).hexdigest()
+#                     def createHash(password, salt):
+#                         return getHash(password+salt)
+#                     password = createHash(account_salt_payload["password"], method["result"][0]["password_salt"])
+#                     email_login_payload = {
+#                         "email": "testapi@gmail.com",
+#                         "password": password
+#                     }
+#                     email_login_response = requests.post(LOGIN_URL + "/Login/MMU", data=json.dumps(email_login_payload), headers=headers)
+#                     query = f'''DELETE FROM mmu.users
+#                             WHERE user_uid="{user_uid}"'''
+#                     result = db.delete(query)
+#                     if not (email_login_response.status_code == 200):
+#                         api_list_failed.append('Email Login API')
+#                     else:
+#                         api_list_successful.append('Email Login API')
+#                 count += 1
 
-            print(" \n\n Successfully ran test APIs \n\n ")
+#             print(" \n\n Successfully ran test APIs \n\n ")
+
+#             try:
+#                 if not api_list_failed:
+#                     message_content = f"Hello,\n\nDate/Time: {dt}. \nEndpoint Test CRONJOB ran successfully. \n\nTotal number of APIs tested: {count}. \nList of APIs ran successfully: {api_list_successful}"
+#                 else:
+#                     message_content = f"Hello,\n\nDate/Time: {dt}. \nEndpoint Test CRONJOB ran successfully. \n\nTotal number of APIs tested: {count}. \n\nList of APIs ran successfully: {api_list_successful} \n\nList of APIs failed: {api_list_failed}"
+
+#                 SendEmail_CRON(message_content)
+
+#                 response["email"] = {'message': f'EndpointTest CRON Job Email for {dt} sent!' ,
+#                         'code': 500}
+#             except:
+#                 response["email fail"] = {'message': f'EndpointTest CRON Job Email for {dt} could not be sent' ,
+#                         'code': 500}
+        
+#         except:
+#             try:
+#                 message_content = f"Hello,\n\nDate/Time: {dt}. \nThere was some error while running Endpoint Test CRONJOB"
+
+#                 SendEmail_CRON(message_content)
+
+#                 response["email"] = {'message': f'EndpointTest CRON Job Fail Email for {dt} sent!' ,
+#                         'code': 500}
+#             except:
+#                 response["email fail"] = {'message': f'EndpointTest CRON Job Fail Email for {dt} could not be sent' ,
+#                         'code': 500}
+#         return response
+
+# def endpointTest_CRON():
+#     print("In endpointTest CRON")
+#     BASE_URL = "https://41c664jpz1.execute-api.us-west-1.amazonaws.com/dev"
+#     LOGIN_URL = "https://mrle52rri4.execute-api.us-west-1.amazonaws.com/dev/api/v2"
+#     dt = datetime.now()
+#     response = {}
+#     count = 0
+#     api_list_failed = []
+#     api_list_successful = []
+
+#     try:
+#         with connect() as db:
+
+#             # ******** Userinfo ********
+#             get_userinfo_response = requests.get(BASE_URL + "/userinfo/100-000001")
+#             if not (get_userinfo_response.status_code == 200):
+#                 api_list_failed.append('Get UserInfo API')
+#             else:
+#                 api_list_successful.append('Get UserInfo API')
+#             count += 1
+
+#             put_userinfo_payload = {
+#                 "user_uid": "100-000006",
+#                 "user_email_id": "mollysymonds@gmail.com",
+#                 "user_first_name": "Molly",
+#                 "user_last_name": "Symonds",
+#                 "user_notification_preference": "True",
+#                 "user_location_service": "True",
+#                 "user_date_interests": "Coffee,Lunch,Dinner",
+#                 "user_available_time": '[{"day": "Wednesday", "end_time": "06:00 PM", "start_time": "02:00 PM"}, {"day": "Sunday", "end_time": "04:00 PM", "start_time": "01:00 PM"}, {"day": "Saturday", "end_time": "10:00 PM", "start_time": "11:00 AM"}]'
+#             }
+#             put_userinfo_response = requests.put(BASE_URL + "/userinfo", data=put_userinfo_payload)
+#             if not (put_userinfo_response.status_code == 200):
+#                 api_list_failed.append('Put UserInfo API')
+#             else:
+#                 api_list_successful.append('Put UserInfo API')
+#             count += 1
+
+#             # ******** Likes ********
+#             get_likes_response = requests.get(BASE_URL + "/likes/100-000001")
+#             if not (get_likes_response.status_code == 200):
+#                 api_list_failed.append('Get likes API')
+#             else:
+#                 api_list_successful.append('Get likes API')
+#             count += 1
+
+#             post_likes_payload = {
+#                 "liker_user_id": "100-000001",
+#                 "liked_user_id": "100-000004"
+#             }
+#             post_likes_response = requests.post(BASE_URL + "/likes", data=post_likes_payload)
+#             if not (post_likes_response.status_code == 200):
+#                 api_list_failed.append('Post Likes API')
+#             else:
+#                 api_list_successful.append('Post Likes API')
+#             count += 1
+
+#             delete_likes_payload = {
+#                 "liker_user_id": "100-000001",
+#                 "liked_user_id": "100-000004"
+#             }
+#             delete_likes_response = requests.delete(BASE_URL + "/likes", data=delete_likes_payload)
+#             if not (delete_likes_response.status_code == 200):
+#                 api_list_failed.append('Delete Likes API')
+#             else:
+#                 api_list_successful.append('Delete Likes API')
+#             count += 1
+
+#             # ******** Meet ********
+#             get_meet_response = requests.get(BASE_URL + "/meet/100-000001")
+#             if not (get_meet_response.status_code == 200):
+#                 api_list_failed.append('Get Meet API')
+#             else:
+#                 api_list_successful.append('Get Meet API')
+#             count += 1
+
+#             post_meet_payload = {
+#                 "meet_user_id": "100-000001",
+#                 "meet_date_user_id": "100-000004",
+#                 "meet_day": "Saturday",
+#                 "meet_time": "7:00 AM"
+#             }
+#             post_meet_response = requests.post(BASE_URL + "/meet", data=post_meet_payload)
+#             post_meet_delete = post_meet_response.json()
+#             query = f'''DELETE FROM mmu.meet
+#                     WHERE meet_uid="{post_meet_delete['meet_uid']}"'''
+#             result = db.delete(query)
+#             if not (post_meet_response.status_code == 200):
+#                 api_list_failed.append('Post Meet API')
+#             else:
+#                 api_list_successful.append('Post Meet API')
+#             count += 1
+
+#             # ******** Lists ********
+#             get_lists_response = requests.get(BASE_URL + "/lists?list_category=activities")
+#             if not (get_lists_response.status_code == 200):
+#                 api_list_failed.append('Get Lists API')
+#             else:
+#                 api_list_successful.append('Get Lists API')
+#             count += 1
+
+#             # ******** Messages ********
+#             get_messages_response = requests.get(BASE_URL + "/messages?sender_id=100-000001&receiver_id=100-000007")
+#             if not (get_messages_response.status_code == 200):
+#                 api_list_failed.append('Get Messages API')
+#             else:
+#                 api_list_successful.append('Get Messages API')
+#             count += 1
+
+#             post_messages_payload = {
+#                 "sender_id": "100-000001",
+#                 "receiver_id": "100-000002",
+#                 "message_content": "Hi, There"
+#             }
+#             headers = {
+#                 'Content-Type': 'application/json'
+#             }
+#             post_messages_response = requests.post(BASE_URL + "/messages", data=json.dumps(post_messages_payload), headers=headers)
+#             delete = post_messages_response.json()
+#             query = f'''DELETE FROM mmu.messages
+#                     WHERE message_uid="{delete['message_uid']}"'''
+#             result = db.delete(query)
+#             if not (post_messages_response.status_code == 200):
+#                 api_list_failed.append('Post Messages API')
+#             else:
+#                 api_list_successful.append('Post Messages API')
+#             count += 1
+
+#             # ******** Matches ********
+#             get_matches_response = requests.get(BASE_URL + "/matches/100-000001")
+#             if not (get_matches_response.status_code == 200):
+#                 api_list_failed.append('Get Matches API')
+#             else:
+#                 api_list_successful.append('Get Matches API')
+#             count += 1
+            
+#             # ******** Login ********
+#             user_uid = ""
+#             create_account_payload = {
+#                     "email": "testapi@gmail.com",
+#                     "password": "123",
+#                     "phone_number": "(408) 679-4332"
+#                 }
+#             create_account_response = requests.post(LOGIN_URL + "/CreateAccount/MMU", data=json.dumps(create_account_payload), headers=headers)
+#             delete = create_account_response.json()
+#             user_uid = delete['result'][0]['user_uid']
+#             if not (create_account_response.status_code == 200):
+#                 api_list_failed.append('Create Account API')
+#             else:
+#                 api_list_successful.append('Create Account API')
+#             count += 1
+
+#             account_salt_payload = {
+#                 "email": "testapi@gmail.com",
+#                 "password": "123"
+#             }
+#             account_salt_response = requests.post(LOGIN_URL + "/AccountSalt/MMU", data=json.dumps(account_salt_payload), headers=headers)
+#             if not (account_salt_response.status_code == 200):
+#                 api_list_failed.append("Account Salt API")
+#             else:
+#                 print(' Now In Login Part')
+#                 api_list_successful.append('Account Salt API')
+#                 method = account_salt_response.json()
+#                 def getHash(value):
+#                     base = str(value).encode()
+#                     return sha256(base).hexdigest()
+#                 def createHash(password, salt):
+#                     return getHash(password+salt)
+#                 password = createHash(account_salt_payload["password"], method["result"][0]["password_salt"])
+#                 email_login_payload = {
+#                     "email": "testapi@gmail.com",
+#                     "password": password
+#                 }
+#                 email_login_response = requests.post(LOGIN_URL + "/Login/MMU", data=json.dumps(email_login_payload), headers=headers)
+#                 query = f'''DELETE FROM mmu.users
+#                         WHERE user_uid="{user_uid}"'''
+#                 result = db.delete(query)
+#                 if not (email_login_response.status_code == 200):
+#                     api_list_failed.append('Email Login API')
+#                 else:
+#                     api_list_successful.append('Email Login API')
+#             count += 1
+
+#         print(" \n\n Successfully ran test APIs \n\n ")
+
+#         try:
+#             if not api_list_failed:
+#                 message_content = f"Hello,\n\nDate/Time: {dt}. \nEndpoint Test CRONJOB ran successfully. \n\nTotal number of APIs tested: {count}. \nList of APIs ran successfully: {api_list_successful}"
+#             else:
+#                 message_content = f"Hello,\n\nDate/Time: {dt}. \nEndpoint Test CRONJOB ran successfully. \n\nTotal number of APIs tested: {count}. \n\nList of APIs ran successfully: {api_list_successful} \n\nList of APIs failed: {api_list_failed}"
+
+#             SendEmail_CRON(message_content)
+
+#             response["email"] = {'message': f'EndpointTest CRON Job Email for {dt} sent!' ,
+#                     'code': 500}
+#         except:
+#             response["email fail"] = {'message': f'EndpointTest CRON Job Email for {dt} could not be sent' ,
+#                     'code': 500}
+    
+#     except:
+#         try:
+#             message_content = f"Hello,\n\nDate/Time: {dt}. \nThere was some error while running Endpoint Test CRONJOB"
+
+#             SendEmail_CRON(message_content)
+
+#             response["email"] = {'message': f'EndpointTest CRON Job Fail Email for {dt} sent!' ,
+#                     'code': 500}
+#         except:
+#             response["email fail"] = {'message': f'EndpointTest CRON Job Fail Email for {dt} could not be sent' ,
+#                     'code': 500}
+#     return response
+
+
+class endpointTest_CLASS(Resource):
+    def get(self):
+        print("\nIn Test API Endpoints Class - GET Method\n\n")
+        response = {}
+        dt = datetime.today()
+        try:
+            print("in try", dt)
+            obj = test_endpoint_CLASS()
+            response = obj.get()
+            
+            if "cron fail" in response.keys():
+                raise Exception("Error in cronjob") 
 
             try:
-                if not api_list_failed:
-                    message_content = f"Hello,\n\nDate/Time: {dt}. \nEndpoint Test CRONJOB ran successfully. \n\nTotal number of APIs tested: {count}. \nList of APIs ran successfully: {api_list_successful}"
-                else:
-                    message_content = f"Hello,\n\nDate/Time: {dt}. \nEndpoint Test CRONJOB ran successfully. \n\nTotal number of APIs tested: {count}. \n\nList of APIs ran successfully: {api_list_successful} \n\nList of APIs failed: {api_list_failed}"
+                recipients = ["pmarathay@gmail.com",
+                             "saumyashah4751@gmail.com"]
+                subject = f"MMU Test API CRON JOB for {dt} Completed "
+                body = f"MMU Test API CRON JOB has been executed. \n\n{response}\n\n" + "\n"
 
-                SendEmail_CRON(message_content)
+                for recipient in recipients:
+                    sendEmail(recipient, subject, body)
 
-                response["email"] = {'message': f'EndpointTest CRON Job Email for {dt} sent!' ,
-                        'code': 500}
+                response["email"] = {'message': f'MMU Test API CRON Job Email for {dt} sent!' , 'code': 200}
+
             except:
-                response["email fail"] = {'message': f'EndpointTest CRON Job Email for {dt} could not be sent' ,
-                        'code': 500}
-        
+                response["email fail"] = {'message': f'MMU Test API CRON Job Email for {dt} could not be sent' , 'code': 500}
+
         except:
             try:
-                message_content = f"Hello,\n\nDate/Time: {dt}. \nThere was some error while running Endpoint Test CRONJOB"
+                recipients = ["pmarathay@gmail.com",
+                             "saumyashah4751@gmail.com"]
+                subject = "MMU Test API CRON JOB Failed!"
+                body = f"MMU Test API CRON JOB Failed. \n\n{response}\n\n"
 
-                SendEmail_CRON(message_content)
+                for recipient in recipients:
+                    sendEmail(recipient, subject, body)
 
-                response["email"] = {'message': f'EndpointTest CRON Job Fail Email for {dt} sent!' ,
-                        'code': 500}
+                response["email"] = {'message': f'MMU Test API CRON Job Fail Email for {dt} sent!' , 'code': 201}
+
             except:
-                response["email fail"] = {'message': f'EndpointTest CRON Job Fail Email for {dt} could not be sent' ,
-                        'code': 500}
+                response["email fail"] = {'message': f'MMU Test API CRON Job Fail Email for {dt} could not be sent' , 'code': 500}
+
         return response
 
 def endpointTest_CRON():
-    print("In endpointTest CRON")
-    BASE_URL = "https://41c664jpz1.execute-api.us-west-1.amazonaws.com/dev"
-    LOGIN_URL = "https://mrle52rri4.execute-api.us-west-1.amazonaws.com/dev/api/v2"
-    dt = datetime.now()
+    print("\nIn Test API Endpoints Class - GET Method\n\n")
     response = {}
-    count = 0
-    api_list_failed = []
-    api_list_successful = []
-
+    dt = datetime.today()
     try:
-        with connect() as db:
+        print("in try", dt)
+        obj = test_endpoint_CLASS()
+        response = obj.get()
 
-            # ******** Userinfo ********
-            get_userinfo_response = requests.get(BASE_URL + "/userinfo/100-000001")
-            if not (get_userinfo_response.status_code == 200):
-                api_list_failed.append('Get UserInfo API')
-            else:
-                api_list_successful.append('Get UserInfo API')
-            count += 1
-
-            put_userinfo_payload = {
-                "user_uid": "100-000006",
-                "user_email_id": "mollysymonds@gmail.com",
-                "user_first_name": "Molly",
-                "user_last_name": "Symonds",
-                "user_notification_preference": "True",
-                "user_location_service": "True",
-                "user_date_interests": "Coffee,Lunch,Dinner",
-                "user_available_time": '[{"day": "Wednesday", "end_time": "06:00 PM", "start_time": "02:00 PM"}, {"day": "Sunday", "end_time": "04:00 PM", "start_time": "01:00 PM"}, {"day": "Saturday", "end_time": "10:00 PM", "start_time": "11:00 AM"}]'
-            }
-            put_userinfo_response = requests.put(BASE_URL + "/userinfo", data=put_userinfo_payload)
-            if not (put_userinfo_response.status_code == 200):
-                api_list_failed.append('Put UserInfo API')
-            else:
-                api_list_successful.append('Put UserInfo API')
-            count += 1
-
-            # ******** Likes ********
-            get_likes_response = requests.get(BASE_URL + "/likes/100-000001")
-            if not (get_likes_response.status_code == 200):
-                api_list_failed.append('Get likes API')
-            else:
-                api_list_successful.append('Get likes API')
-            count += 1
-
-            post_likes_payload = {
-                "liker_user_id": "100-000001",
-                "liked_user_id": "100-000004"
-            }
-            post_likes_response = requests.post(BASE_URL + "/likes", data=post_likes_payload)
-            if not (post_likes_response.status_code == 200):
-                api_list_failed.append('Post Likes API')
-            else:
-                api_list_successful.append('Post Likes API')
-            count += 1
-
-            delete_likes_payload = {
-                "liker_user_id": "100-000001",
-                "liked_user_id": "100-000004"
-            }
-            delete_likes_response = requests.delete(BASE_URL + "/likes", data=delete_likes_payload)
-            if not (delete_likes_response.status_code == 200):
-                api_list_failed.append('Delete Likes API')
-            else:
-                api_list_successful.append('Delete Likes API')
-            count += 1
-
-            # ******** Meet ********
-            get_meet_response = requests.get(BASE_URL + "/meet/100-000001")
-            if not (get_meet_response.status_code == 200):
-                api_list_failed.append('Get Meet API')
-            else:
-                api_list_successful.append('Get Meet API')
-            count += 1
-
-            post_meet_payload = {
-                "meet_user_id": "100-000001",
-                "meet_date_user_id": "100-000004",
-                "meet_day": "Saturday",
-                "meet_time": "7:00 AM"
-            }
-            post_meet_response = requests.post(BASE_URL + "/meet", data=post_meet_payload)
-            post_meet_delete = post_meet_response.json()
-            query = f'''DELETE FROM mmu.meet
-                    WHERE meet_uid="{post_meet_delete['meet_uid']}"'''
-            result = db.delete(query)
-            if not (post_meet_response.status_code == 200):
-                api_list_failed.append('Post Meet API')
-            else:
-                api_list_successful.append('Post Meet API')
-            count += 1
-
-            # ******** Lists ********
-            get_lists_response = requests.get(BASE_URL + "/lists?list_category=activities")
-            if not (get_lists_response.status_code == 200):
-                api_list_failed.append('Get Lists API')
-            else:
-                api_list_successful.append('Get Lists API')
-            count += 1
-
-            # ******** Messages ********
-            get_messages_response = requests.get(BASE_URL + "/messages?sender_id=100-000001&receiver_id=100-000007")
-            if not (get_messages_response.status_code == 200):
-                api_list_failed.append('Get Messages API')
-            else:
-                api_list_successful.append('Get Messages API')
-            count += 1
-
-            post_messages_payload = {
-                "sender_id": "100-000001",
-                "receiver_id": "100-000002",
-                "message_content": "Hi, There"
-            }
-            headers = {
-                'Content-Type': 'application/json'
-            }
-            post_messages_response = requests.post(BASE_URL + "/messages", data=json.dumps(post_messages_payload), headers=headers)
-            delete = post_messages_response.json()
-            query = f'''DELETE FROM mmu.messages
-                    WHERE message_uid="{delete['message_uid']}"'''
-            result = db.delete(query)
-            if not (post_messages_response.status_code == 200):
-                api_list_failed.append('Post Messages API')
-            else:
-                api_list_successful.append('Post Messages API')
-            count += 1
-
-            # ******** Matches ********
-            get_matches_response = requests.get(BASE_URL + "/matches/100-000001")
-            if not (get_matches_response.status_code == 200):
-                api_list_failed.append('Get Matches API')
-            else:
-                api_list_successful.append('Get Matches API')
-            count += 1
-            
-            # ******** Login ********
-            user_uid = ""
-            create_account_payload = {
-                    "email": "testapi@gmail.com",
-                    "password": "123",
-                    "phone_number": "(408) 679-4332"
-                }
-            create_account_response = requests.post(LOGIN_URL + "/CreateAccount/MMU", data=json.dumps(create_account_payload), headers=headers)
-            delete = create_account_response.json()
-            user_uid = delete['result'][0]['user_uid']
-            if not (create_account_response.status_code == 200):
-                api_list_failed.append('Create Account API')
-            else:
-                api_list_successful.append('Create Account API')
-            count += 1
-
-            account_salt_payload = {
-                "email": "testapi@gmail.com",
-                "password": "123"
-            }
-            account_salt_response = requests.post(LOGIN_URL + "/AccountSalt/MMU", data=json.dumps(account_salt_payload), headers=headers)
-            if not (account_salt_response.status_code == 200):
-                api_list_failed.append("Account Salt API")
-            else:
-                print(' Now In Login Part')
-                api_list_successful.append('Account Salt API')
-                method = account_salt_response.json()
-                def getHash(value):
-                    base = str(value).encode()
-                    return sha256(base).hexdigest()
-                def createHash(password, salt):
-                    return getHash(password+salt)
-                password = createHash(account_salt_payload["password"], method["result"][0]["password_salt"])
-                email_login_payload = {
-                    "email": "testapi@gmail.com",
-                    "password": password
-                }
-                email_login_response = requests.post(LOGIN_URL + "/Login/MMU", data=json.dumps(email_login_payload), headers=headers)
-                query = f'''DELETE FROM mmu.users
-                        WHERE user_uid="{user_uid}"'''
-                result = db.delete(query)
-                if not (email_login_response.status_code == 200):
-                    api_list_failed.append('Email Login API')
-                else:
-                    api_list_successful.append('Email Login API')
-            count += 1
-
-        print(" \n\n Successfully ran test APIs \n\n ")
+        if "cron fail" in response.keys():
+            raise Exception("Error in cronjob") 
 
         try:
-            if not api_list_failed:
-                message_content = f"Hello,\n\nDate/Time: {dt}. \nEndpoint Test CRONJOB ran successfully. \n\nTotal number of APIs tested: {count}. \nList of APIs ran successfully: {api_list_successful}"
-            else:
-                message_content = f"Hello,\n\nDate/Time: {dt}. \nEndpoint Test CRONJOB ran successfully. \n\nTotal number of APIs tested: {count}. \n\nList of APIs ran successfully: {api_list_successful} \n\nList of APIs failed: {api_list_failed}"
+            recipients = ["pmarathay@gmail.com",
+                            "saumyashah4751@gmail.com"]
+            subject = f"MMU Test API CRON JOB for {dt} Completed "
+            body = f"MMU Test API CRON JOB has been executed. \n\n{response}\n\n" + "\n"
 
-            SendEmail_CRON(message_content)
+            for recipient in recipients:
+                sendEmail(recipient, subject, body)
 
-            response["email"] = {'message': f'EndpointTest CRON Job Email for {dt} sent!' ,
-                    'code': 500}
+            response["email"] = {'message': f'MMU Test API CRON Job Email for {dt} sent!' , 'code': 200}
+
         except:
-            response["email fail"] = {'message': f'EndpointTest CRON Job Email for {dt} could not be sent' ,
-                    'code': 500}
-    
+            response["email fail"] = {'message': f'MMU Test API CRON Job Email for {dt} could not be sent' , 'code': 500}
+
     except:
         try:
-            message_content = f"Hello,\n\nDate/Time: {dt}. \nThere was some error while running Endpoint Test CRONJOB"
+            recipients = ["pmarathay@gmail.com",
+                            "saumyashah4751@gmail.com"]
+            subject = "MMU Test API CRON JOB Failed!"
+            body = f"MMU Test API CRON JOB Failed. \n\n{response}\n\n"
 
-            SendEmail_CRON(message_content)
+            for recipient in recipients:
+                sendEmail(recipient, subject, body)
 
-            response["email"] = {'message': f'EndpointTest CRON Job Fail Email for {dt} sent!' ,
-                    'code': 500}
+            response["email"] = {'message': f'MMU Test API CRON Job Fail Email for {dt} sent!' , 'code': 201}
+
         except:
-            response["email fail"] = {'message': f'EndpointTest CRON Job Fail Email for {dt} could not be sent' ,
-                    'code': 500}
+            response["email fail"] = {'message': f'MMU Test API CRON Job Fail Email for {dt} could not be sent' , 'code': 500}
+
     return response
 
 
@@ -1071,6 +1167,7 @@ api.add_resource(Messages, "/messages")
 api.add_resource(Announcements, "/announcements", "/announcements/<user_id>")
 api.add_resource(Password, "/resetpassword")
 api.add_resource(endpointTest_CLASS, "/testapi")
+# api.add_resource(test_endpoint_CLASS, "/v2/testapi")
 
 if __name__ == '__main__':
     # socketio.run(app, host='127.0.0.1', port=4000, debug=True)
