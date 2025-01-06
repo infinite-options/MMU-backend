@@ -87,6 +87,77 @@ def get_matches_age_height_distance(current_user_data, matches):
             "message": "Error in Get Matches age height distance"
         })
 
+def get_matches_extended_preferences(current_user_data, matches):
+    """
+    Extended matching function that includes lifestyle and preference matching
+    """
+    print("\n\n\t in extended preferences \n")
+    try:
+        result = []
+        for match in matches:
+            # Initialize match flag
+            is_match = True
+            
+            # Body Type Check (user_body_composition)
+            if (current_user_data.get('user_body_composition') and 
+                match.get('user_body_composition') and 
+                current_user_data['user_body_composition'] != 'Any'):
+                if match['user_body_composition'] not in ["Slim", "Athletic", "Curvy", "Plus Sized", "Few Extra Pounds"]:
+                    is_match = False
+                    
+            # Smoking Preference Check
+            if (current_user_data.get('user_smoking') and 
+                match.get('user_smoking') and 
+                current_user_data['user_smoking'] != 'Either'):
+                if current_user_data['user_smoking'] != match['user_smoking']:
+                    is_match = False
+                    
+            # Drinking Preference Check
+            if (current_user_data.get('user_drinking') and 
+                match.get('user_drinking') and 
+                current_user_data['user_drinking'] != 'Either'):
+                if current_user_data['user_drinking'] != match['user_drinking']:
+                    is_match = False
+                    
+            # Religion Preference Check
+            if (current_user_data.get('user_religion') and 
+                match.get('user_religion') and 
+                current_user_data['user_religion'] != 'Any'):
+                if current_user_data['user_religion'] != match['user_religion']:
+                    is_match = False
+                    
+            # Kids Preference Check
+            if (current_user_data.get('user_prefer_kids') and 
+                match.get('user_kids')):
+                if not check_kids_preference(current_user_data['user_prefer_kids'], match['user_kids']):
+                    is_match = False
+            
+            if is_match:
+                result.append(match)
+                
+        return result
+    except Exception as e:
+        return jsonify({
+            "message": "Error in Get Matches extended preferences",
+            "error": str(e)
+        })
+
+def check_kids_preference(prefer_kids, actual_kids):
+    """
+    Helper function to check if the number of kids matches preferences
+    Returns True if it's a match, False otherwise
+    """
+    try:
+        if prefer_kids == '0' and actual_kids != '0':
+            return False
+        if prefer_kids == '1-2' and int(actual_kids) > 2:
+            return False
+        if prefer_kids == '3+' and int(actual_kids) < 3:
+            return False
+        return True
+    except ValueError:
+        # If we can't parse the values, we'll return True to not exclude matches
+        return True
 
 def suggest_age_min(current_user_data, matches):
     print("In age min")
@@ -189,10 +260,9 @@ class Match(Resource):
                         "message": "No Matches found because of preferred gender or open to list"
                     })
 
-                result =  get_matches_age_height_distance(current_user_data, response['result'])
+                result = get_matches_age_height_distance(current_user_data, response['result'])
 
                 if not result:
-
                     final_response = {}
                     final_response['message'] = "No matches found"
 
@@ -200,7 +270,6 @@ class Match(Resource):
                     age_max_suggestions = suggest_age_max(current_user_data, response['result'])
                     height_suggestions = suggest_height(current_user_data, response['result'])
                     distance_suggestions = suggest_distance(current_user_data, response['result'])
-
 
                     if (age_min_suggestions):
                         final_response['Lower minimum age'] = age_min_suggestions
@@ -219,7 +288,15 @@ class Match(Resource):
                         final_response['Raise maximum distance'] = "No matches found"
 
                     return final_response
-                
+
+                # Apply extended preference filtering
+                result = get_matches_extended_preferences(current_user_data, result)
+
+                if not result:
+                    return jsonify({
+                        "message": "No matches found after applying lifestyle preferences"
+                    })
+
                 # Matching 2 way
                 final_result = []
                 for user in result:
@@ -241,8 +318,9 @@ class Match(Resource):
                         "message": "Matches Found",
                         "result": final_result,
                     })
-        except:
+        except Exception as e:
             return jsonify({
                 "code": 400,
-                "message": "There was an error while running the matching algorithm"
+                "message": "There was an error while running the matching algorithm",
+                "error": str(e)
             })
