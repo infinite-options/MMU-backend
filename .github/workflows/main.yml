@@ -54,13 +54,27 @@ jobs:
             cd /home/ec2-user/mmu-backend
             source .venv/bin/activate
             cd MMU-backend
+            
+            # Pull latest code
             echo "Pulling latest code..."
             git pull origin master
-            echo "Restarting application..."
-            pkill -f "python3 mmu_api.py" || echo "No existing app running"
+            
+            # Install dependencies
             echo "Installing dependencies..."
             pip3 install -r requirements.txt --no-deps
-            nohup python3 mmu_api.py >> mmu.log 2>&1 &
-            echo "Application started"
+            
+            # Restart the application using supervisor
+            echo "Restarting application..."
+            sudo supervisorctl restart mmu
+            
+            echo "Deployment completed"
             exit 0
+
+            # echo "Restarting application..."
+            # pkill -f "python3 mmu_api.py" || echo "No existing app running"
+            # echo "Installing dependencies..."
+            # pip3 install -r requirements.txt --no-deps
+            # nohup python3 mmu_api.py >> mmu.log 2>&1 &
+            # echo "Application started"
+            # exit 0
           EOF
