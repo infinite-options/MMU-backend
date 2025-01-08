@@ -124,10 +124,10 @@ def uploadImage(file, key, content):
         filename = f'https://s3-us-west-1.amazonaws.com/{bucket}/{key}'
         # print("Before Upload: ", bucket, key, filename, contentType)
 
-        config = TransferConfig(
-            multipart_threshold=5 * 1024 * 1024,  # Files larger than 5 MB will be split
-            multipart_chunksize=5 * 1024 * 1024   # Each part will be 5 MB
-        )
+        # config = TransferConfig(
+        #     multipart_threshold=5 * 1024 * 1024,  # Files larger than 5 MB will be split
+        #     multipart_chunksize=5 * 1024 * 1024   # Each part will be 5 MB
+        # )
 
         # This Statement Actually uploads the file into S3
         # upload_file = s3.put_object(
