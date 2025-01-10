@@ -11,6 +11,8 @@
 # import eventlet
 # eventlet.monkey_patch()
 
+print("-------------------- New Program Run --------------------")
+
 # SECTION 1:  IMPORT FILES AND FUNCTIONS
 # from users import UserInfo
 from lists import List

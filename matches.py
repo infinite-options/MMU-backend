@@ -25,8 +25,9 @@ def get_matches_sexuality_open_to(current_user_data, user_uid):
                     AND user_gender IN ({current_user_prefer_gender})
                     AND user_sexuality IN ({current_user_open_to})
                     '''
-
+            print(query)
             matched_users_response = db.execute(query, cmd='get')
+            # print(matched_users_response)
 
             if len(matched_users_response['result']) == 0:
                 return (False, matched_users_response)
@@ -238,7 +239,7 @@ def suggest_distance(current_user_data, matches):
 class Match(Resource):
 
     def get(self, user_uid):
-        print(" In Get ")
+        print("In Get ")
         try:
             with connect() as db:
 

@@ -184,7 +184,7 @@ def processImage(key, payload):
         # print("key_type: ", key_type, type(key_type))
         # print("key_uid: ", key_uid, type(key_uid))
         # print("payload_images: ", payload_images, type(payload_images))        
-        # print("payload_images delete: ", payload_delete_images, type(payload_delete_images))
+        print("payload_images delete: ", payload_delete_images, type(payload_delete_images))
 
         # Check if images already exist
         # Put current db images into current_images

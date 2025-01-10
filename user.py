@@ -81,6 +81,7 @@ class UserInfo(Resource):
                 for i in range(3):
                     if f"img_{i}" in request.files:
                         new_image_count += 1
+                        print(new_image_count)
 
                 if (len(current_images) + new_image_count > 3 and 'user_delete_photo' not in payload.keys()):
                     return make_response(jsonify({

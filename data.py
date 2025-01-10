@@ -525,9 +525,9 @@ class DatabaseConnection:
         self.disconnect()
 
     def execute(self, sql, args=[], cmd='get'):
-        print("In execute.  SQL: ", sql)
-        print("In execute.  args: ",args)
-        print("In execute.  cmd: ",cmd)
+        # print("In execute.  SQL: ", sql)
+        # print("In execute.  args: ",args)
+        # print("In execute.  cmd: ",cmd)
         response = {}
         try:
             with self.conn.cursor() as cur:
@@ -539,7 +539,7 @@ class DatabaseConnection:
                 formatted_sql = f"{sql} (args: {args})"                    
 
                 if 'get' in cmd:
-                    print('IN GET')
+                    # print('IN GET')
                     result = cur.fetchall()
                     # print("After result: ", result, type(result))
                     result = serializeJSON(result)
