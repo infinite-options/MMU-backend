@@ -23,11 +23,14 @@ def get_matches_sexuality_open_to(current_user_data, user_uid):
                     FROM mmu.users
                     WHERE user_uid != "{user_uid}"
                     AND user_gender IN ({current_user_prefer_gender})
-                    AND user_sexuality IN ({current_user_open_to})
+                    -- AND user_sexuality IN ({current_user_open_to})
                     '''
-            print(query)
+            # print(query)
             matched_users_response = db.execute(query, cmd='get')
             # print(matched_users_response)
+            matched_users = [user['user_uid'] for user in matched_users_response['result']]
+            print(matched_users)
+            print(len(matched_users))
 
             if len(matched_users_response['result']) == 0:
                 return (False, matched_users_response)
@@ -68,33 +71,75 @@ def get_matches_age_height_distance(current_user_data, matches):
         current_user_max_distance_preference = current_user_data['user_prefer_distance']
         current_user_latitude = current_user_data['user_latitude']
         current_user_longitude = current_user_data['user_longitude']
+        # print(f"Current User Preferences:\n"
+        # f"- Min Age Preference: {current_user_min_age_preference} (type: {type(current_user_min_age_preference).__name__})\n"
+        # f"- Max Age Preference: {current_user_max_age_preference} (type: {type(current_user_max_age_preference).__name__})\n"
+        # f"- Min Height Preference: {current_user_min_height_preference} (type: {type(current_user_min_height_preference).__name__})\n"
+        # f"- Max Distance Preference: {current_user_max_distance_preference} (type: {type(current_user_max_distance_preference).__name__})\n"
+        # f"- Latitude: {current_user_latitude} (type: {type(current_user_latitude).__name__})\n"
+        # f"- Longitude: {current_user_longitude} (type: {type(current_user_longitude).__name__})")
+
 
         result = []
 
         for match in matches:
-            distance = calculate_distance(current_user_latitude, current_user_longitude, match['user_latitude'], match['user_longitude'])
-            match['distance'] = distance
+            # print(match['user_uid'])
+            
+            # Check if user has entered long & lat:
+            if match['user_latitude'] not in (None, "") and match['user_longitude'] not in (None, ""):
+                distance = calculate_distance(current_user_latitude, current_user_longitude, match['user_latitude'], match['user_longitude'])
+                match['distance'] = distance
+            else:
+                match['distance'] = 50000
+
+            # print(match['user_uid'], match['user_age'], match['user_height'], match['distance'])
+            # print(f"User UID: {match['user_uid']} (type: {type(match['user_uid']).__name__}), "
+            # f"Age: {match['user_age']} (type: {type(match['user_age']).__name__}), "
+            # f"Height: {match['user_height']} (type: {type(match['user_height']).__name__}), "
+            # f"Distance: {match['distance']} (type: {type(match['distance']).__name__})")
+
+            # check if user has entered height and age:
+            # if match['user_age'] not in (None, 0, "") and match['user_height'] not in (None, 0, ""):
 
             if (current_user_min_age_preference <= match['user_age'] <= current_user_max_age_preference and
                 int(match['user_height']) >= int(current_user_min_height_preference) and
                 distance <= current_user_max_distance_preference
                 ):
                 result.append(match)
+                # print("Cum Matches: ", len(result))
 
+            # if (current_user_min_age_preference <= match['user_age'] <= current_user_max_age_preference): 
+            #     print(match['user_uid'], match['user_age'], match['user_height'], match['distance'])
+            #     result.append(match)
+            #     print("Cum Matches: ", len(result))
+            # else:
+            #     print("This user did not match")
+                # print("Cum Matches: ", len(result))
+                # print(result)
+            
+            # print(result)
+            # print([user['user_uid'] for user in result])
+        print([user['user_uid'] for user in result])
+        print(len(result))
+        # return result
+        # print(len(result)) 
         return result
-    
+
     except Exception as e:
         return jsonify({
             "message": "Error in Get Matches age height distance"
         })
+
 
 def get_matches_extended_preferences(current_user_data, matches):
     """
     Extended matching function that includes lifestyle and preference matching
     """
     print("\n\n\t in extended preferences \n")
+    # print(current_user_data, matches)
     try:
         result = []
+        print(len(matches))
         for match in matches:
             # Initialize match flag
             is_match = True
@@ -135,7 +180,10 @@ def get_matches_extended_preferences(current_user_data, matches):
             
             if is_match:
                 result.append(match)
-                
+
+        # print(result)   
+        print([user['user_uid'] for user in result])   
+        print(len(result))        
         return result
     except Exception as e:
         return jsonify({
@@ -251,8 +299,8 @@ class Match(Resource):
                     }), 400)
                 
                 current_user_data = current_user['result'][0]
-                print("Got the current user's information")
-                print(current_user_data)
+                # print("Got the current user's information")
+                # print(current_user_data)
 
                 check, response = get_matches_sexuality_open_to(current_user_data, user_uid)
 
@@ -262,6 +310,8 @@ class Match(Resource):
                     })
 
                 result = get_matches_age_height_distance(current_user_data, response['result'])
+                # print(result)
+                print("Matches after Height Filter: ", len(result))
 
                 if not result:
                     final_response = {}
