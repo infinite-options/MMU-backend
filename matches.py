@@ -19,13 +19,26 @@ def get_matches_sexuality_open_to(current_user_data, user_uid):
             current_user_prefer_gender = f"'{current_user_prefer_gender}'"
         
         with connect() as db:
-            query = f'''SELECT *
-                    FROM mmu.users
+            # query = f'''SELECT *
+            #         FROM mmu.users
+            #         WHERE user_uid != "{user_uid}"
+            #         AND user_gender IN ({current_user_prefer_gender})
+            #         -- AND user_sexuality IN ({current_user_open_to})
+            #         '''
+            query = f'''
+                    SELECT u.* ,
+                        if(l1.liked_user_id = "{user_uid}", 'YES', 'NO') AS "Likes",
+                        if(l2.liker_user_id = "{user_uid}", 'YES', 'NO') AS "Liked by"
+                    FROM mmu.users u
+                    LEFT JOIN 
+                        mmu.likes l1 ON u.user_uid = l1.liker_user_id AND l1.liked_user_id = "{user_uid}"
+                    LEFT JOIN 
+                        mmu.likes l2 ON u.user_uid = l2.liked_user_id AND l2.liker_user_id = "{user_uid}"
                     WHERE user_uid != "{user_uid}"
                     AND user_gender IN ({current_user_prefer_gender})
                     -- AND user_sexuality IN ({current_user_open_to})
                     '''
-            # print(query)
+            print(query)
             matched_users_response = db.execute(query, cmd='get')
             # print(matched_users_response)
             matched_users = [user['user_uid'] for user in matched_users_response['result']]
