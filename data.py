@@ -598,24 +598,63 @@ class DatabaseConnection:
                     sql += ' AND '
             if limit:
                 sql += f' LIMIT {limit}'
+            # print(sql % where)
             response = self.execute(sql, where, 'get')
         except Exception as e:
             print(e)
         return response
 
+    # def insert(self, table, object):
+    #     response = {}
+    #     try:
+    #         sql = f'INSERT INTO {table} SET '
+    #         for i, key in enumerate(object.keys()):
+    #             sql += f'{key} = %({key})s'
+    #             if i != len(object.keys()) - 1:
+    #                 sql += ', '
+    #         print(sql)
+    #         # print(object)
+    #         response = self.execute(sql, object, 'post')
+    #     except Exception as e:
+    #         print(e)
+    #     return response
+    
     def insert(self, table, object):
         response = {}
         try:
             sql = f'INSERT INTO {table} SET '
-            for i, key in enumerate(object.keys()):
-                sql += f'{key} = %({key})s'
-                if i != len(object.keys()) - 1:
-                    sql += ', '
-            # print(sql)
-            # print(object)
+            debug_sql = f'INSERT INTO {table} SET '
+
+            single_quote = "'"
+            
+            for key in object.keys():
+                sql += f'{key} = %({key})s, '
+                
+                # Add to debug SQL with formatted values
+                value = object[key]
+                if value is None:
+                    formatted_value = 'NULL'
+                elif isinstance(value, (int, float, bool)):
+                    formatted_value = str(value)
+                else:
+                    # Escape single quotes and wrap in quotes
+                    formatted_value = f"{single_quote}{str(value).replace(single_quote, single_quote*2)}{single_quote}"
+
+                debug_sql += f'{key} = {formatted_value}, '
+            
+            # Remove trailing commas and finalize SQL
+            sql = sql.rstrip(', ')
+            debug_sql = debug_sql.rstrip(', ')
+            
+            # print("Executing SQL:", sql)
+            # print("Debug SQL:", debug_sql)
+            
             response = self.execute(sql, object, 'post')
+            
         except Exception as e:
-            print(e)
+            print(f"Database Error: {str(e)}")
+            response = {'error': str(e)}
+            
         return response
 
     def update(self, table, primaryKey, object):

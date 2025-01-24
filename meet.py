@@ -26,12 +26,16 @@ class Meet(Resource):
         try:
             with connect() as db:
                 new_user_uid = db.call(procedure='new_meet_uid')
+                print(new_user_uid)
 
                 payload = request.form.to_dict()
                 payload['meet_uid'] = new_user_uid['result'][0]['new_id']
+                print(payload)
 
                 meetQuery = db.insert('meet', payload)
+                print(meetQuery)
                 meetQuery['meet_uid'] = new_user_uid['result'][0]['new_id']
+                print(meetQuery['meet_uid'])
 
                 userQuery = db.execute(f'''SELECT user_first_name FROM mmu.users WHERE user_uid = "{payload['meet_user_id']}"''', cmd='get')
                 print(userQuery)
@@ -47,6 +51,7 @@ class Meet(Resource):
                 try:
                     # response = requests.post("http://127.0.0.1:4000/announcements", json=data)
                     response = Announcements().post(data)
+                    print(response)
                     meetQuery['announcements added'] = "TRUE"
                 except:
                     return jsonify({

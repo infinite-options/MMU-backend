@@ -94,6 +94,7 @@ class Likes(Resource):
         try:
             with connect() as db:
                 payload = request.form.to_dict()
+                print("In Likes: ", payload)
 
                 try:
                     checkQuery = db.select('likes', where=payload)

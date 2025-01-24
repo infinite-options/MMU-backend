@@ -38,12 +38,12 @@ def get_matches_sexuality_open_to(current_user_data, user_uid):
                     AND user_gender IN ({current_user_prefer_gender})
                     -- AND user_sexuality IN ({current_user_open_to})
                     '''
-            print(query)
+            # print(query)
             matched_users_response = db.execute(query, cmd='get')
             # print(matched_users_response)
             matched_users = [user['user_uid'] for user in matched_users_response['result']]
             print(matched_users)
-            print(len(matched_users))
+            print("Matches after Sexuality Filter: ", len(matched_users))
 
             if len(matched_users_response['result']) == 0:
                 return (False, matched_users_response)
@@ -96,13 +96,17 @@ def get_matches_age_height_distance(current_user_data, matches):
         result = []
 
         for match in matches:
-            # print(match['user_uid'])
+            print(match['user_uid'])
             
             # Check if user has entered long & lat:
             if match['user_latitude'] not in (None, "") and match['user_longitude'] not in (None, ""):
+                print("1")
                 distance = calculate_distance(current_user_latitude, current_user_longitude, match['user_latitude'], match['user_longitude'])
+                print(distance)
                 match['distance'] = distance
+
             else:
+                print("2")
                 match['distance'] = 50000
 
             # print(match['user_uid'], match['user_age'], match['user_height'], match['distance'])
@@ -114,10 +118,13 @@ def get_matches_age_height_distance(current_user_data, matches):
             # check if user has entered height and age:
             # if match['user_age'] not in (None, 0, "") and match['user_height'] not in (None, 0, ""):
 
+
+            print("3")
             if (current_user_min_age_preference <= match['user_age'] <= current_user_max_age_preference and
                 int(match['user_height']) >= int(current_user_min_height_preference) and
                 distance <= current_user_max_distance_preference
                 ):
+                print("4")
                 result.append(match)
                 # print("Cum Matches: ", len(result))
 
@@ -196,7 +203,8 @@ def get_matches_extended_preferences(current_user_data, matches):
 
         # print(result)   
         print([user['user_uid'] for user in result])   
-        print(len(result))        
+        print(len(result))
+        print("Matches after Extended Preferences: ", len(result))        
         return result
     except Exception as e:
         return jsonify({
@@ -300,7 +308,7 @@ def suggest_distance(current_user_data, matches):
 class Match(Resource):
 
     def get(self, user_uid):
-        print("In Get ")
+        print("In Matches Get")
         try:
             with connect() as db:
 
@@ -356,6 +364,8 @@ class Match(Resource):
                 # Apply extended preference filtering
                 result = get_matches_extended_preferences(current_user_data, result)
 
+                # print("After matching result: ", result)
+
                 if not result:
                     return jsonify({
                         "message": "No matches found after applying lifestyle preferences"
@@ -363,7 +373,10 @@ class Match(Resource):
 
                 # Matching 2 way
                 final_result = []
+                print("Current User Preferences: ",current_user_data['user_age'], current_user_data['user_height'], current_user_data['user_sexuality'])
                 for user in result:
+                    print(user['user_uid'])
+                    print(user['user_prefer_age_min'], user['user_prefer_age_max'], user['user_prefer_height_min'], user['user_open_to'])
                     if (user['user_prefer_age_min'] <= current_user_data['user_age'] <= user['user_prefer_age_max'] and
                         current_user_data['user_height'] >= user['user_prefer_height_min'] and
                         current_user_data['user_sexuality'] in ast.literal_eval(user['user_open_to'])
