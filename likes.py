@@ -33,24 +33,37 @@ class Likes(Resource):
                 # response['matched_results'] = result['result']
 
                 # Matched Results
-                likeQuery = f'''SELECT l1.like_uid, 
-                                       u.user_uid, 
-                                       u.user_email_id, 
-                                       u.user_first_name, 
-                                       u.user_last_name, 
-                                       u.user_age, 
-                                       u.user_gender,
-                                       u.user_photo_url,
-                                       meet.*
-                                FROM mmu.likes l1
-                                LEFT JOIN mmu.users u ON l1.liked_user_id = u.user_uid
-                                LEFT JOIN mmu.meet ON (l1.liker_user_id = meet_user_id OR l1.liker_user_id = meet_date_user_id)
-                                WHERE l1.liker_user_id = "{user_id}" AND EXISTS (
-                                    SELECT 1
-                                    FROM mmu.likes l2
-                                    WHERE l2.liker_user_id = l1.liked_user_id
+                likeQuery = f'''
+                                SELECT *
+                                FROM (
+                                    SELECT l1.like_uid, 
+                                        u.user_uid, 
+                                        u.user_email_id, 
+                                        u.user_first_name, 
+                                        u.user_last_name, 
+                                        u.user_age, 
+                                        u.user_gender,
+                                        u.user_photo_url
+                                    FROM mmu.likes l1
+                                    LEFT JOIN mmu.users u ON l1.liked_user_id = u.user_uid
+                                    -- WHERE l1.liker_user_id = "100-000307" 
+                                    WHERE l1.liker_user_id = "{user_id}"
+                                    AND EXISTS (
+                                        SELECT 1
+                                        FROM mmu.likes l2
+                                        WHERE l2.liker_user_id = l1.liked_user_id
                                         AND l2.liked_user_id = l1.liker_user_id
-                                );'''
+                                    )
+                                ) AS matches  -- Subquery alias placement fixed
+                                LEFT JOIN mmu.meet m1 
+                                    ON matches.user_uid = m1.meet_date_user_id 
+                                    -- AND m1.meet_user_id = "100-000307"
+                                    AND m1.meet_user_id = "{user_id}"
+                                LEFT JOIN mmu.meet m2 
+                                    ON matches.user_uid = m2.meet_user_id 
+                                    -- AND m2.meet_date_user_id = "100-000307"
+                                    AND m2.meet_date_user_id = "{user_id}"
+                                '''
                 result = db.execute(likeQuery)
                 response['matched_results'] = result['result']
                 response['result'].extend([{'matched_results': result['result']}])
