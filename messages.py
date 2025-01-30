@@ -15,6 +15,7 @@ def get_conversation_id(sender_id, receiver_id, db):
 class Messages(Resource):
 
     def get(self):
+        print("In Messages GET")
 
         sender_id = request.args.get('sender_id')
         receiver_id = request.args.get('receiver_id')
@@ -46,7 +47,8 @@ class Messages(Resource):
 
 
     def post(self):
-
+        print("In Messages POST")
+        
         data = request.get_json()
         sender_id = data['sender_id']
         receiver_id = data['receiver_id']
