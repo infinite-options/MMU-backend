@@ -105,7 +105,9 @@ class UserInfo(Resource):
 
             # Map singular to plural for a new column
             identity_mapping = {'Man': 'Men', 'Woman': 'Women', 'Man (TG)': 'Men (TG)', 'Woman (TG)': 'Women (TG)'}
-            payload['user_identity_plural'] = identity_mapping.get(payload.get('user_identity'), payload.get('user_identity'))
+            if payload.get('user_identity'):
+                payload['user_identity_plural'] = identity_mapping.get(payload.get('user_identity'), payload.get('user_identity'))
+            print(payload)
             
             userQuery = db.update('users', key, payload)
         
