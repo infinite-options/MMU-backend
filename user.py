@@ -102,6 +102,11 @@ class UserInfo(Resource):
                     }), 406)
                 
             processImage(key, payload)
+
+            # Map singular to plural for a new column
+            identity_mapping = {'Man': 'Men', 'Woman': 'Women', 'Man (TG)': 'Men (TG)', 'Woman (TG)': 'Women (TG)'}
+            payload['user_identity_plural'] = identity_mapping.get(payload.get('user_identity'), payload.get('user_identity'))
+            
             userQuery = db.update('users', key, payload)
         
         return userQuery
