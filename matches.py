@@ -10,13 +10,17 @@ def get_matches_sexuality_open_to(current_user_data, user_uid):
     print(" \n\t In Sexuality Open To Function \n")
     try:
         current_user_prefer_gender = current_user_data['user_prefer_gender']
+        print("Gender Preferences: ",  current_user_prefer_gender)
 
         current_user_open_to = ast.literal_eval(current_user_data['user_open_to'])
+        print("Open To Preferences: ",  current_user_open_to)
         current_user_open_to = ', '.join(f"'{item}'" for item in current_user_open_to)
         if not current_user_prefer_gender or current_user_prefer_gender is None or current_user_prefer_gender == "Either":
             current_user_prefer_gender = "'Male','Female'"
         else:
             current_user_prefer_gender = f"'{current_user_prefer_gender}'"
+
+        print(current_user_prefer_gender)
         
         with connect() as db:
             # query = f'''SELECT *
@@ -38,7 +42,7 @@ def get_matches_sexuality_open_to(current_user_data, user_uid):
                     AND user_gender IN ({current_user_prefer_gender})
                     -- AND user_sexuality IN ({current_user_open_to})
                     '''
-            # print(query)
+            print(query)
             matched_users_response = db.execute(query, cmd='get')
             # print(matched_users_response)
             matched_users = [user['user_uid'] for user in matched_users_response['result']]
