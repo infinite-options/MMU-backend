@@ -377,6 +377,17 @@ class Match(Resource):
                 for user in result:
                     print(user['user_uid'])
                     print(user['user_prefer_age_min'], user['user_prefer_age_max'], user['user_prefer_height_min'], user['user_open_to'])
+
+                    # Ensure current_user_data fields are not None, null, or empty
+                    if not all([
+                        user.get('user_prefer_age_min') is not None,
+                        user.get('user_prefer_age_max') is not None,
+                        user.get('user_prefer_height_min') is not None,
+                        user.get('user_open_to')  # Ensures it's not None or empty
+                    ]):
+                        print(user['user_uid'], " ---------------->>>>>>>   Skipped")
+                        continue  # Skip this user if any required field is missing            
+
                     if (user['user_prefer_age_min'] <= current_user_data['user_age'] <= user['user_prefer_age_max'] and
                         current_user_data['user_height'] >= user['user_prefer_height_min'] and
                         current_user_data['user_sexuality'] in ast.literal_eval(user['user_open_to'])
