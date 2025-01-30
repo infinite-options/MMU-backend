@@ -33,6 +33,13 @@ class UserInfo(Resource):
                 payload = request.form.to_dict()
                 payload['user_uid'] = new_user_uid['result'][0]['new_id']
                 print(payload)
+
+                # Map singular to plural for a new column
+                identity_mapping = {'Man': 'Men', 'Woman': 'Women', 'Man (TG)': 'Men (TG)', 'Woman (TG)': 'Women (TG)'}
+                payload['user_identity_plural'] = identity_mapping.get(payload.get('user_identity'), payload.get('user_identity'))
+
+
+                print(payload)
                 parameter = {'user_email_id': payload['user_email_id']}
                 email_exists = db.select('users', where=parameter)
                 

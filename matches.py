@@ -84,13 +84,13 @@ def get_matches_age_height_distance(current_user_data, matches):
         current_user_max_distance_preference = current_user_data['user_prefer_distance']
         current_user_latitude = current_user_data['user_latitude']
         current_user_longitude = current_user_data['user_longitude']
-        # print(f"Current User Preferences:\n"
-        # f"- Min Age Preference: {current_user_min_age_preference} (type: {type(current_user_min_age_preference).__name__})\n"
-        # f"- Max Age Preference: {current_user_max_age_preference} (type: {type(current_user_max_age_preference).__name__})\n"
-        # f"- Min Height Preference: {current_user_min_height_preference} (type: {type(current_user_min_height_preference).__name__})\n"
-        # f"- Max Distance Preference: {current_user_max_distance_preference} (type: {type(current_user_max_distance_preference).__name__})\n"
-        # f"- Latitude: {current_user_latitude} (type: {type(current_user_latitude).__name__})\n"
-        # f"- Longitude: {current_user_longitude} (type: {type(current_user_longitude).__name__})")
+        print(f"Current User Preferences:\n"
+        f"- Min Age Preference: {current_user_min_age_preference} (type: {type(current_user_min_age_preference).__name__})\n"
+        f"- Max Age Preference: {current_user_max_age_preference} (type: {type(current_user_max_age_preference).__name__})\n"
+        f"- Min Height Preference: {current_user_min_height_preference} (type: {type(current_user_min_height_preference).__name__})\n"
+        f"- Max Distance Preference: {current_user_max_distance_preference} (type: {type(current_user_max_distance_preference).__name__})\n"
+        f"- Latitude: {current_user_latitude} (type: {type(current_user_latitude).__name__})\n"
+        f"- Longitude: {current_user_longitude} (type: {type(current_user_longitude).__name__})")
 
 
         result = []
@@ -98,16 +98,19 @@ def get_matches_age_height_distance(current_user_data, matches):
         for match in matches:
             print(match['user_uid'])
             
-            # Check if user has entered long & lat:
-            if match['user_latitude'] not in (None, "") and match['user_longitude'] not in (None, ""):
-                print("1")
-                distance = calculate_distance(current_user_latitude, current_user_longitude, match['user_latitude'], match['user_longitude'])
-                print(distance)
-                match['distance'] = distance
+            if current_user_latitude not in (None, "") and current_user_longitude not in (None, ""):
+                # Check if user has entered long & lat:
+                if match['user_latitude'] not in (None, "") and match['user_longitude'] not in (None, ""):
+                    print("1")
+                    distance = calculate_distance(current_user_latitude, current_user_longitude, match['user_latitude'], match['user_longitude'])
+                    print(distance)
+                    match['distance'] = distance
 
+                else:
+                    print("2")
+                    match['distance'] = 50000
             else:
-                print("2")
-                match['distance'] = 50000
+                distance = 0
 
             # print(match['user_uid'], match['user_age'], match['user_height'], match['distance'])
             # print(f"User UID: {match['user_uid']} (type: {type(match['user_uid']).__name__}), "
@@ -120,12 +123,24 @@ def get_matches_age_height_distance(current_user_data, matches):
 
 
             print("3")
+            # print(match['user_age'], type(match['user_age']))
+            # if(current_user_min_age_preference <= match['user_age'] <= current_user_max_age_preference):
+            #     print("True 1")
+            # print(match['user_height'], type(match['user_height']))
+            # if(int(match['user_height']) >= int(current_user_min_height_preference)):
+            #     print("True 2")
+            # print(distance, type(distance))
+            # if(distance <= current_user_max_distance_preference):
+            #     print("True 3")
             if (current_user_min_age_preference <= match['user_age'] <= current_user_max_age_preference and
                 int(match['user_height']) >= int(current_user_min_height_preference) and
                 distance <= current_user_max_distance_preference
                 ):
-                print("4")
+                print("Matched")
                 result.append(match)
+            else:
+                print(" ---------------->>>>>>>   No Match!")
+                continue
                 # print("Cum Matches: ", len(result))
 
             # if (current_user_min_age_preference <= match['user_age'] <= current_user_max_age_preference): 
@@ -313,6 +328,7 @@ class Match(Resource):
             with connect() as db:
 
                 current_user = db.select('users', where={'user_uid': user_uid})
+                print('Current User: ', current_user)
                     
                 if not current_user['result']:
                     return make_response(jsonify({
@@ -373,7 +389,8 @@ class Match(Resource):
 
                 # Matching 2 way
                 final_result = []
-                print("Current User Preferences: ",current_user_data['user_age'], current_user_data['user_height'], current_user_data['user_sexuality'])
+                print("\n Reverse Match")
+                print("Current User Data: ",current_user_data['user_age'], current_user_data['user_height'], current_user_data['user_sexuality'])
                 for user in result:
                     print(user['user_uid'])
                     print(user['user_prefer_age_min'], user['user_prefer_age_max'], user['user_prefer_height_min'], user['user_open_to'])
@@ -388,20 +405,28 @@ class Match(Resource):
                         print(user['user_uid'], " ---------------->>>>>>>   Skipped")
                         continue  # Skip this user if any required field is missing            
 
-                    if (user['user_prefer_age_min'] <= current_user_data['user_age'] <= user['user_prefer_age_max'] and
-                        current_user_data['user_height'] >= user['user_prefer_height_min'] and
-                        current_user_data['user_sexuality'] in ast.literal_eval(user['user_open_to'])
+                    if (user['user_prefer_age_min'] <= current_user_data['user_age'] <= user['user_prefer_age_max']
+                        and current_user_data['user_height'] >= user['user_prefer_height_min']
+                        and current_user_data['user_identity_plural'] in ast.literal_eval(user['user_open_to'])
+                        # and current_user_data['user_open_to'] in ast.literal_eval(user['user_open_to'])
                         ):
+                        print("Append User")
                         final_result.append(user)
+                        # print(final_result['user_uid'])
+                        print("Go on to next user")
                 
                 
+                print(final_result)
                 if not final_result:
+                    print("5")
                     return jsonify({
                         "message": "No matches found because of 2 way matching",
                         "result of 1 way match": result
                     })
                 else:
-                    final_result.sort(key= lambda x: x['distance'])
+                    print("6")
+                    # print(final_result)
+                    # final_result.sort(key= lambda x: x['distance'])
                     return jsonify({
                         "message": "Matches Found",
                         "result": final_result,
