@@ -1,4 +1,4 @@
-from flask import jsonify, make_response
+from flask import request, abort, make_response, jsonify
 from flask_restful import Resource
 import json
 
@@ -17,6 +17,7 @@ def get_matches_sexuality_open_to(current_user_data, user_uid):
 
         # Convert 'user_open_to' from string to list
         user_open_to_list = ast.literal_eval(current_user_data['user_open_to'])
+        print(user_open_to_list)
 
         # Format the list into SQL-compatible string
         current_user_open_to = ', '.join(f'"{x}"' for x in user_open_to_list)
@@ -60,7 +61,7 @@ def get_matches_sexuality_open_to(current_user_data, user_uid):
             matched_users_response = db.execute(query, cmd='get')
             # print(matched_users_response)
             matched_users = [user['user_uid'] for user in matched_users_response['result']]
-            print(matched_users)
+            # print(matched_users)
             print("Matches after Sexuality Filter: ", len(matched_users))
 
             if len(matched_users_response['result']) == 0:
@@ -125,14 +126,14 @@ def get_matches_distance(current_user_data, matches):
             # print(distance)
 
             if distance <= current_user_max_distance_preference:
-                print("Matched", match['user_uid'], distance)
+                # print("Matched", match['user_uid'], distance)
                 result.append(match)
 
             else:
                 # print(" ---------------->>>>>>>   No Match!")
                 continue
 
-        print([user['user_uid'] for user in result])
+        # print([user['user_uid'] for user in result])
         print(len(result))
         # return result
         # print(len(result)) 
@@ -154,17 +155,17 @@ def get_matches_height(current_user_data, matches):
         result = []
 
         for match in matches:
-            print(match['user_uid'])
+            # print(match['user_uid'])
             
             # Check if user has entered height:
             if int(match['user_height']) >= int(current_user_min_height_preference):
-                print("Height Matched ", match['user_height'], int(current_user_min_height_preference))
+                # print("Height Matched ", match['user_height'], int(current_user_min_height_preference))
                 result.append(match)
             else:
-                print(" ---------------->>>>>>>   No Match!")
+                # print(" ---------------->>>>>>>   No Match!")
                 continue
 
-        print([user['user_uid'] for user in result])
+        # print([user['user_uid'] for user in result])
         print(len(result))
         # return result
         # print(len(result)) 
@@ -188,17 +189,17 @@ def get_matches_age(current_user_data, matches):
         result = []
 
         for match in matches:
-            print(match['user_uid'])
+            # print(match['user_uid'])
             
             # Check if user has entered height:
             if current_user_min_age_preference <= match['user_age'] <= current_user_max_age_preference:
-                print("Age Matched ", match['user_age'], int(current_user_min_age_preference), int(current_user_max_age_preference))
+                # print("Age Matched ", match['user_age'], int(current_user_min_age_preference), int(current_user_max_age_preference))
                 result.append(match)
             else:
-                print(" ---------------->>>>>>>   No Match!")
+                # print(" ---------------->>>>>>>   No Match!")
                 continue
 
-        print([user['user_uid'] for user in result])
+        # print([user['user_uid'] for user in result])
         print(len(result))
         # return result
         # print(len(result)) 
@@ -599,6 +600,39 @@ class Match(Resource):
                         "message": "Matches Found",
                         "result": final_result,
                     })
+        except Exception as e:
+            return jsonify({
+                "code": 400,
+                "message": "There was an error while running the matching algorithm",
+                "error": str(e)
+            })
+
+
+    def put(self):
+        print("In Matches Put")
+        try:
+            with connect() as db:
+                payload = request.form.to_dict()
+                # print(payload)
+                user_uid = payload.pop('user_uid')
+                key = {'user_uid': user_uid}
+                # print(key)
+
+                email = db.select('users', key, cols='user_email_id')
+                if email['result'][0]['user_email_id'] != payload['user_email_id']:
+                    return make_response(jsonify({
+                            'code': 400,
+                            'name': 'Bad Request',
+                            'description': "Email-id doesn't match with the email-id linked with provided user_uid"
+                        }), 400)
+
+                userQuery = db.update('users', key, payload)
+                # print(userQuery)
+
+                updated_data = self.get(user_uid)
+
+                return updated_data
+
         except Exception as e:
             return jsonify({
                 "code": 400,
