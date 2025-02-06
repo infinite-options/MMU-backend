@@ -475,7 +475,7 @@ class Match(Resource):
                 current_user_data = current_user['result'][0]
                 # print("Got the current user's information")
                 print(user_uid)
-                # print(current_user_data)
+                print(current_user_data)
 
 
                 # Sexuality
@@ -613,7 +613,7 @@ class Match(Resource):
         try:
             with connect() as db:
                 payload = request.form.to_dict()
-                # print(payload)
+                print(payload)
                 user_uid = payload.pop('user_uid')
                 key = {'user_uid': user_uid}
                 # print(key)
@@ -627,7 +627,7 @@ class Match(Resource):
                         }), 400)
 
                 userQuery = db.update('users', key, payload)
-                # print(userQuery)
+                print(userQuery)
 
                 updated_data = self.get(user_uid)
 
