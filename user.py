@@ -35,7 +35,7 @@ class UserInfo(Resource):
                 print(payload)
 
                 # Map singular to plural for a new column
-                identity_mapping = {'Man': 'Men', 'Woman': 'Women', 'Man (TG)': 'Men (TG)', 'Woman (TG)': 'Women (TG)'}
+                identity_mapping = {'Man': 'Men', 'Woman': 'Women', 'Man (transgender)': 'Men (TG)', 'Woman (transgender)': 'Women (TG)'}
                 payload['user_identity_plural'] = identity_mapping.get(payload.get('user_identity'), payload.get('user_identity'))
 
 
