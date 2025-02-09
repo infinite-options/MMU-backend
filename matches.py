@@ -145,7 +145,7 @@ def get_matches_distance(current_user_data, matches):
         })
 
 def get_matches_height(current_user_data, matches):
-    print("\n\n\t in height \n")
+    # print("\n\n\t in height \n")
     try:
         current_user_min_height_preference = int(current_user_data['user_prefer_height_min'])
 
@@ -158,7 +158,7 @@ def get_matches_height(current_user_data, matches):
             # print(match['user_uid'])
             
             # Check if user has entered height:
-            if int(match['user_height']) >= int(current_user_min_height_preference):
+            if match['user_height'] and int(match['user_height']) >= int(current_user_min_height_preference):
                 # print("Height Matched ", match['user_height'], int(current_user_min_height_preference))
                 result.append(match)
             else:
