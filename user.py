@@ -63,8 +63,10 @@ class UserInfo(Resource):
 
         with connect() as db:
             payload = request.form.to_dict()
+            print("Payload: ", payload)
             user_uid = payload.pop('user_uid')
             key = {'user_uid': user_uid}
+            print("Key: ", key)
 
             email = db.select('users', key, cols='user_email_id')
             if email['result'][0]['user_email_id'] != payload['user_email_id']:
@@ -77,12 +79,14 @@ class UserInfo(Resource):
 
             # Process Images
             if 'img_0' in request.files:
+                print("images being saved")
                 payload_query = db.execute(""" SELECT user_photo_url FROM mmu.users WHERE user_uid = \'""" + user_uid + """\'; """)     
                 
                 payload_images = payload_query['result'][0]['user_photo_url']
                 current_images = []
                 if payload_images is not None and payload_images != '' and payload_images != 'null':
                     current_images =ast.literal_eval(payload_images)
+                    print("Current Images: ", current_images)
                 
                 new_image_count = 0
                 for i in range(3):
@@ -101,7 +105,9 @@ class UserInfo(Resource):
                         "message": f"You already have {len(current_images)} photos uploaded. You are deleting {len(ast.literal_eval(payload['user_delete_photo']))} photo(s) and trying to add {new_image_count} new photo(s). There is/are {extra - 3} extra photo(s)."
                     }), 406)
                 
-            processImage(key, payload)
+                print("Key: ", key)
+                print("Payload: ", payload)    
+                processImage(key, payload)
 
             # Map singular to plural for a new column
             identity_mapping = {'Man': 'Men', 'Woman': 'Women', 'Man (TG)': 'Men (TG)', 'Woman (TG)': 'Women (TG)'}
