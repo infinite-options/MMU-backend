@@ -23,6 +23,26 @@ class UserInfo(Resource):
     #     else:                
     #         abort(404, description="User not found")
 
+    # def get(self, user_id):
+    #     print("In UserInfo GET")
+
+    #     # Reverse mapping for openTo
+    #     reverse_openTo_mapping = {'Men (TG)': 'Men (transgender)', 'Women (TG)': 'Women (transgender)'}
+
+    #     with connect() as db:
+    #         userQuery = db.select('users', {'user_uid': user_id})
+
+    #     if userQuery['code'] == 200 and int(len(userQuery['result']) > 0):
+    #         # Perform reverse mapping on 'openTo' if present in the result
+    #         for user in userQuery['result']:
+    #             # Reverse mapping for 'openTo'
+    #             if 'openTo' in user:
+    #                 user['openTo'] = [reverse_openTo_mapping.get(item, item) for item in user['openTo']]
+
+    #         return userQuery
+    #     else:
+    #         abort(404, description="User not found")
+
     def get(self, user_id):
         print("In UserInfo GET")
 
@@ -35,9 +55,16 @@ class UserInfo(Resource):
         if userQuery['code'] == 200 and int(len(userQuery['result']) > 0):
             # Perform reverse mapping on 'openTo' if present in the result
             for user in userQuery['result']:
-                # Reverse mapping for 'openTo'
-                if 'openTo' in user:
-                    user['openTo'] = [reverse_openTo_mapping.get(item, item) for item in user['openTo']]
+                # Parse 'user_open_to' if it's stored as a string and reverse map values
+                if 'user_open_to' in user:
+                    # Parse the JSON string back into a list
+                    open_to_list = json.loads(user['user_open_to'])
+                    
+                    # Reverse mapping for 'openTo'
+                    user['user_open_to'] = [reverse_openTo_mapping.get(item, item) for item in open_to_list]
+                    
+                    # Convert the list back into a JSON string before sending to frontend
+                    user['user_open_to'] = json.dumps(user['user_open_to'])
 
             return userQuery
         else:
@@ -138,12 +165,30 @@ class UserInfo(Resource):
                 payload['user_identity_plural'] = identity_mapping.get(payload.get('user_identity'), payload.get('user_identity'))
 
             
+            # # Map transgender to TG
+            # openTo_mapping = {'Men (transgender)': 'Men (TG)', 'Women (transgender)': 'Women (TG)'}
+
+            # # Check if 'openTo' is present in the payload and map values accordingly
+            # if payload.get('openTo'):
+            #     payload['openTo'] = [openTo_mapping.get(item, item) for item in payload['openTo']]
+
+            # print(payload)
+
+
+
             # Map transgender to TG
             openTo_mapping = {'Men (transgender)': 'Men (TG)', 'Women (transgender)': 'Women (TG)'}
 
-            # Check if 'openTo' is present in the payload and map values accordingly
-            if payload.get('openTo'):
-                payload['openTo'] = [openTo_mapping.get(item, item) for item in payload['openTo']]
+            # Check if 'user_open_to' is present in the payload and map values accordingly
+            if payload.get('user_open_to'):
+                # Convert the string to a list
+                open_to_list = json.loads(payload['user_open_to'])
+                
+                # Map values in the list
+                payload['user_open_to'] = [openTo_mapping.get(item, item) for item in open_to_list]
+
+                # Convert the list back into a JSON string
+                payload['user_open_to'] = json.dumps(payload['user_open_to'])
 
             print(payload)
 
