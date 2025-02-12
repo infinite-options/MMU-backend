@@ -12,16 +12,37 @@ import ast
 
 class UserInfo(Resource):
     
+    # def get(self, user_id):
+    #     print("In UserInfo GET")
+
+    #     with connect() as db:
+    #         userQuery = db.select('users', {'user_uid': user_id})
+
+    #     if userQuery['code'] == 200 and int(len(userQuery['result']) > 0):                
+    #         return userQuery
+    #     else:                
+    #         abort(404, description="User not found")
+
     def get(self, user_id):
         print("In UserInfo GET")
+
+        # Reverse mapping for openTo
+        reverse_openTo_mapping = {'Men (TG)': 'Men (transgender)', 'Women (TG)': 'Women (transgender)'}
 
         with connect() as db:
             userQuery = db.select('users', {'user_uid': user_id})
 
-        if userQuery['code'] == 200 and int(len(userQuery['result']) > 0):                
+        if userQuery['code'] == 200 and int(len(userQuery['result']) > 0):
+            # Perform reverse mapping on 'openTo' if present in the result
+            for user in userQuery['result']:
+                # Reverse mapping for 'openTo'
+                if 'openTo' in user:
+                    user['openTo'] = [reverse_openTo_mapping.get(item, item) for item in user['openTo']]
+
             return userQuery
-        else:                
+        else:
             abort(404, description="User not found")
+
     
     def post(self):
         print("In UserInfo POST")
@@ -116,9 +137,13 @@ class UserInfo(Resource):
             if payload.get('user_identity'):
                 payload['user_identity_plural'] = identity_mapping.get(payload.get('user_identity'), payload.get('user_identity'))
 
+            
+            # Map transgender to TG
+            openTo_mapping = {'Men (transgender)': 'Men (TG)', 'Women (transgender)': 'Women (TG)'}
+
             # Check if 'openTo' is present in the payload and map values accordingly
             if payload.get('openTo'):
-                payload['openTo'] = [identity_mapping.get(item, item) for item in payload['openTo']]
+                payload['openTo'] = [openTo_mapping.get(item, item) for item in payload['openTo']]
 
             print(payload)
 
