@@ -111,9 +111,17 @@ class UserInfo(Resource):
 
             # Map singular to plural for a new column
             identity_mapping = {'Man': 'Men', 'Woman': 'Women', 'Man (TG)': 'Men (TG)', 'Woman (TG)': 'Women (TG)'}
+
+            # Map 'user_identity' if it's present in the payload
             if payload.get('user_identity'):
                 payload['user_identity_plural'] = identity_mapping.get(payload.get('user_identity'), payload.get('user_identity'))
+
+            # Check if 'openTo' is present in the payload and map values accordingly
+            if payload.get('openTo'):
+                payload['openTo'] = [identity_mapping.get(item, item) for item in payload['openTo']]
+
             print(payload)
+
             
             userQuery = db.update('users', key, payload)
         
