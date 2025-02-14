@@ -142,7 +142,7 @@ def uploadImage(file, key, content):
         # Call the multipart upload function
         upload_file = upload_multipart(file_content, bucket, key, content_type)
 
-        print("After Upload: ", upload_file)
+        print("\nAfter Upload: ", upload_file)
         # print("After Upload Status Code: ", upload_file['ResponseMetadata']['HTTPStatusCode'])
         print("Derived Filename: ", filename)
         return filename
@@ -152,26 +152,26 @@ def uploadImage(file, key, content):
 # --------------- PROCESS IMAGES ------------------
 
 def processImage(key, payload):
-
     print("\nIn Process Image: ", payload)
-
+    # print("Key Passed into processImage: ", key)
     response = {}
-
+    # bucket = os.getenv('BUCKET_NAME')
+    # payload_fav_images = None
     with connect() as db:
         
-
         if 'user_uid' in key:
             print("\n\n-----------User Key passed----------------\n\n")
             key_type = 'users'
             key_uid = key['user_uid']
             payload_delete_images = payload.pop('user_delete_photo', None)  # Images to Delete
-
             #  GET images sent by Frontend. (img_0, img_1, ..)
             if 'img_0' in request.files or 'user_video' in request.files or payload_delete_images != None: 
                 # Current Images in the database  
                 payload_query = db.execute(""" SELECT user_photo_url FROM mmu.users WHERE user_uid = \'""" + key_uid + """\'; """)     
-                
-                payload_images = payload_query['result'][0]['user_photo_url'] 
+                # print("2: ", payload_query['result'], type(payload_query['result']))
+                if len(payload_query['result']) > 0:
+                    print("4: ", payload_query.get('result', [{}])[0].get('user_photo_url', None))
+                payload_images = payload_query['result'][0]['user_photo_url'] if payload_query['result'] else None  # Current Images from database
                 payload_fav_images = payload.get("user_favorite_photo") #or payload.get("img_favorite")   # (PUT & POST)
             else:
                 return payload
@@ -179,22 +179,27 @@ def processImage(key, payload):
         else:
             print("No UID found in key")
             return
-        
+        print("Verified Add or Delete Images in Payload")
 
         # print("key_type: ", key_type, type(key_type))
         # print("key_uid: ", key_uid, type(key_uid))
         # print("payload_images: ", payload_images, type(payload_images))        
         print("payload_images delete: ", payload_delete_images, type(payload_delete_images))
+        if key_type in ['users']: print("payload_fav_images: ", payload_fav_images, type(payload_fav_images))
+
+
 
         # Check if images already exist
         # Put current db images into current_images
+        print("\nAbout to process CURRENT imagess in database")
         current_images = []
-        if payload_images is not None and payload_images != '' and payload_images != 'null':
+        if payload_images not in {None, '', 'null'}:
             print("---Payload Images: ", payload_images, type(payload_images))
             current_images =ast.literal_eval(payload_images)
-            print('\n\n\n Current Images: ', current_images, '\n\n\n')
             print("---Current images: ", current_images, type(current_images))
+        print("processed current images ", current_images)
 
+        video_file = request.files.get('user_video')
 
         # Check if images are being added OR deleted
         images = []
@@ -202,46 +207,43 @@ def processImage(key, payload):
         imageFiles = {}
         video_count = 0
 
-        print("\n\n\n--------------About to Add Images--------------\n\n\n")
+
 
         # ADD Images
+        print("\n\n\n--------------About to Add Images--------------\n")
+
         while True:
             filename = f'img_{i}'
             # print("\n\nPut image file into Filename: ", filename)
-
             file = request.files.get(filename)
-            # print("\n\nFile:" , file)        
-
-            video_file = request.files.get('user_video')
-
+            # print("\n\nFile:" , file)       
             s3Link = payload.get(filename) # Used for fav 
-            print('\n\n\n**** S3LINK', s3Link, '*****\n\n\n')
-            # print("\n\nS3Link: ", s3Link)
+            # print("\nS3Link: ", s3Link) 
 
+            
             if file:
-                # print("\n\nIn 'if file' Statement")
+                print("\n\nIn 'if file' Statement")
                 imageFiles[filename] = file
                 unique_filename = filename + "_" + datetime.datetime.utcnow().strftime('%Y%m%d%H%M%SZ')
                 image_key = f'{key_type}/{key_uid}/photos/{unique_filename}'
-
                 # This calls the uploadImage function that generates the S3 link
                 image = uploadImage(file, image_key, '')
-                
-                # print("\n\nImage after upload: ", image)
+                # print("\nImage after upload: ", image)
 
                 images.append(image)
 
                 if filename == payload_fav_images:
-                    payload["user_favorite_photo"] = json.dumps(image)
+                    payload["user_favorite_photo"] = image
 
             elif s3Link:
                 imageFiles[filename] = s3Link
-                # images.append(s3Link)
+                images.append(s3Link)
 
                 if filename == payload_fav_images:
-                    if key_type == 'user_uid': payload["user_favorite_photo"] = image
+                    payload["user_favorite_photo"] = s3Link
             
             elif video_file and video_count == 0:
+                print("\n\nIn 'if video' Statement")
                 video_query = db.execute(""" SELECT user_video_url FROM mmu.users WHERE user_uid = \'""" + key_uid + """\'; """)
                 delete_video = video_query['result'][0]['user_video_url']
                 unique_filename = f"{key_uid}" + "_" + datetime.datetime.utcnow().strftime('%Y%m%d%H%M%SZ')
@@ -268,9 +270,13 @@ def processImage(key, payload):
         print("Images after loop: ", images)
         if images != []:
             current_images.extend(images)
+        
+        print("processed ADDED documents")
+
 
         # Delete Images
         if payload_delete_images:
+            print("\nAbout to process DELETED images in database;")
             print("In image delete: ", payload_delete_images, type( payload_delete_images))
             delete_images = ast.literal_eval(payload_delete_images)
             print("After ast: ", delete_images, type(delete_images), len(delete_images))
@@ -292,8 +298,9 @@ def processImage(key, payload):
                     deleteImage(delete_key)
                 except: 
                     print("could not delete from S3")
-            
-        # print("\n\nCurrent Images in Function: ", current_images, type(current_images))
+            print("processed DELETED Images")
+
+        print("\n\nCurrent Images in Function: ", current_images, type(current_images))
 
         if key_type == 'users': payload['user_photo_url'] = json.dumps(current_images) 
         # payload.pop('user_favorite_image')
