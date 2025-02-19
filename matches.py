@@ -313,6 +313,7 @@ def get_matches_extended_preferences(current_user_data, matches):
         result = []
         print(len(matches))
         for match in matches:
+            # print(match['user_uid'])
             # Initialize match flag
             is_match = True
             
@@ -322,6 +323,7 @@ def get_matches_extended_preferences(current_user_data, matches):
                 current_user_data['user_body_composition'] != 'Any'):
                 if match['user_body_composition'] not in ["Slim", "Athletic", "Curvy", "Plus Sized", "Few Extra Pounds"]:
                     is_match = False
+                    # print("No Match Body Type")
                     
             # Smoking Preference Check
             if (current_user_data.get('user_smoking') and 
@@ -329,6 +331,7 @@ def get_matches_extended_preferences(current_user_data, matches):
                 current_user_data['user_smoking'] != 'Either'):
                 if current_user_data['user_smoking'] != match['user_smoking']:
                     is_match = False
+                    # print("No Match Smoking")
                     
             # Drinking Preference Check
             if (current_user_data.get('user_drinking') and 
@@ -336,6 +339,7 @@ def get_matches_extended_preferences(current_user_data, matches):
                 current_user_data['user_drinking'] != 'Either'):
                 if current_user_data['user_drinking'] != match['user_drinking']:
                     is_match = False
+                    # print("No Match Drinking")
                     
             # Religion Preference Check
             if (current_user_data.get('user_religion') and 
@@ -343,14 +347,17 @@ def get_matches_extended_preferences(current_user_data, matches):
                 current_user_data['user_religion'] != 'Any'):
                 if current_user_data['user_religion'] != match['user_religion']:
                     is_match = False
+                    # print("No Match Religion")
                     
             # Kids Preference Check
             if (current_user_data.get('user_prefer_kids') and 
                 match.get('user_kids')):
                 if not check_kids_preference(current_user_data['user_prefer_kids'], match['user_kids']):
                     is_match = False
+                    # print("No Match Kids")
             
             if is_match:
+                # print("Is match")
                 result.append(match)
 
         # print(result)   
