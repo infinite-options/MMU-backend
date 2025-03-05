@@ -189,17 +189,19 @@ def get_matches_age(current_user_data, matches):
         result = []
 
         for match in matches:
-            # print(match['user_uid'])
+            print(match['user_uid'],match['user_age'])
             
             # Check if user has entered height:
-            if current_user_min_age_preference <= match['user_age'] <= current_user_max_age_preference:
-                # print("Age Matched ", match['user_age'], int(current_user_min_age_preference), int(current_user_max_age_preference))
+            # if current_user_min_age_preference <= match['user_age'] <= current_user_max_age_preference:
+            if match.get('user_age') and current_user_min_age_preference <= match['user_age'] <= current_user_max_age_preference:
+
+                print("Age Matched ", match['user_age'], int(current_user_min_age_preference), int(current_user_max_age_preference))
                 result.append(match)
             else:
-                # print(" ---------------->>>>>>>   No Match!")
+                print(" ---------------->>>>>>>   No Match!")
                 continue
 
-        # print([user['user_uid'] for user in result])
+        print([user['user_uid'] for user in result])
         print(len(result))
         # return result
         # print(len(result)) 
