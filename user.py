@@ -50,13 +50,16 @@ class UserInfo(Resource):
         reverse_openTo_mapping = {'Men (TG)': 'Men (transgender)', 'Women (TG)': 'Women (transgender)'}
 
         with connect() as db:
+            # print(user_id)
             userQuery = db.select('users', {'user_uid': user_id})
+            # print("Query Result: ", userQuery)
 
         if userQuery['code'] == 200 and int(len(userQuery['result']) > 0):
             # Perform reverse mapping on 'openTo' if present in the result
             for user in userQuery['result']:
                 # Parse 'user_open_to' if it's stored as a string and reverse map values
-                if 'user_open_to' in user:
+                # if 'user_open_to' in user:
+                if 'user_open_to' in user and user['user_open_to']:
                     # Parse the JSON string back into a list
                     open_to_list = json.loads(user['user_open_to'])
                     
@@ -65,6 +68,8 @@ class UserInfo(Resource):
                     
                     # Convert the list back into a JSON string before sending to frontend
                     user['user_open_to'] = json.dumps(user['user_open_to'])
+                else:
+                    user['user_open_to'] = '[]'
 
             return userQuery
         else:
