@@ -552,8 +552,8 @@ class Match(Resource):
 
                     return final_response
 
-                # Apply extended preference filtering
-                response = get_matches_extended_preferences(current_user_data, response)
+                # Apply extended preference filtering - Off for Live Version
+                # response = get_matches_extended_preferences(current_user_data, response)
 
                 # print("After matching result: ", result)
 
