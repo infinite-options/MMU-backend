@@ -16,7 +16,7 @@ print("-------------------- New Program Run --------------------")
 # SECTION 1:  IMPORT FILES AND FUNCTIONS
 # from users import UserInfo
 from lists import List
-from user import UserInfo
+from user import UserInfo, AppleLogin
 from matches import Match
 from meet import Meet
 from likes import Likes
@@ -1157,6 +1157,7 @@ def endpointTest_CRON():
 
 #  -- ACTUAL ENDPOINTS    -----------------------------------------
 
+api.add_resource(AppleLogin, '/appleLogin')
 api.add_resource(List, '/lists')
 api.add_resource(stripe_key, "/stripe_key/<string:desc>")
 api.add_resource(SendEmail_CLASS, "/sendEmail_CLASS")

@@ -185,3 +185,23 @@ class UserInfo(Resource):
             userQuery = db.update('users', key, payload)
         
         return userQuery
+
+class AppleLogin(Resource):
+    def post(self):
+        print("In Apple Login POST")
+
+        response = {}
+        payload = request.get_json()
+        print(payload)
+        
+        if 'id' in payload: 
+            try:
+                with connect() as db:
+
+                    parameter = {'user_social_id': payload['id']}
+                    user_exists = db.select('users', where=parameter)
+
+                    return user_exists['result'][0]
+            
+            except Exception as e:
+                return {"error": e}
