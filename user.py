@@ -196,12 +196,36 @@ class AppleLogin(Resource):
         
         if 'id' in payload: 
             try:
+                # Reverse mapping for openTo
+                reverse_openTo_mapping = {'Men (TG)': 'Men (transgender)', 'Women (TG)': 'Women (transgender)'}
+
                 with connect() as db:
 
                     parameter = {'user_social_id': payload['id']}
-                    user_exists = db.select('users', where=parameter)
+                    userQuery = db.select('users', where=parameter)
 
-                    return user_exists['result'][0]
+                    if userQuery['code'] == 200 and int(len(userQuery['result']) > 0):
+                        # Perform reverse mapping on 'openTo' if present in the result
+                        for user in userQuery['result']:
+                            # Parse 'user_open_to' if it's stored as a string and reverse map values
+                            # if 'user_open_to' in user:
+                            if 'user_open_to' in user and user['user_open_to']:
+                                # Parse the JSON string back into a list
+                                open_to_list = json.loads(user['user_open_to'])
+                                
+                                # Reverse mapping for 'openTo'
+                                user['user_open_to'] = [reverse_openTo_mapping.get(item, item) for item in open_to_list]
+                                
+                                # Convert the list back into a JSON string before sending to frontend
+                                user['user_open_to'] = json.dumps(user['user_open_to'])
+                            else:
+                                user['user_open_to'] = '[]'
+
+                        return userQuery
+
+                    return userQuery
+                
+
             
             except Exception as e:
                 return {"error": e}
