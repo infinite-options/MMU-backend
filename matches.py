@@ -319,44 +319,44 @@ def get_matches_extended_preferences(current_user_data, matches):
             # Initialize match flag
             is_match = True
             
-            # Body Type Check (user_body_composition)
-            if (current_user_data.get('user_body_composition') and 
-                match.get('user_body_composition') and 
-                current_user_data['user_body_composition'] != 'Any'):
-                if match['user_body_composition'] not in ["Slim", "Athletic", "Curvy", "Plus Sized", "Few Extra Pounds"]:
-                    is_match = False
-                    # print("No Match Body Type")
+            # # Body Type Check (user_body_composition)
+            # if (current_user_data.get('user_body_composition') and 
+            #     match.get('user_body_composition') and 
+            #     current_user_data['user_body_composition'] != 'Any'):
+            #     if match['user_body_composition'] not in ["Slim", "Athletic", "Curvy", "Plus Sized", "Few Extra Pounds"]:
+            #         is_match = False
+            #         # print("No Match Body Type")
                     
-            # Smoking Preference Check
-            if (current_user_data.get('user_smoking') and 
-                match.get('user_smoking') and 
-                current_user_data['user_smoking'] != 'Either'):
-                if current_user_data['user_smoking'] != match['user_smoking']:
-                    is_match = False
-                    # print("No Match Smoking")
+            # # Smoking Preference Check
+            # if (current_user_data.get('user_smoking') and 
+            #     match.get('user_smoking') and 
+            #     current_user_data['user_smoking'] != 'Either'):
+            #     if current_user_data['user_smoking'] != match['user_smoking']:
+            #         is_match = False
+            #         # print("No Match Smoking")
                     
-            # Drinking Preference Check
-            if (current_user_data.get('user_drinking') and 
-                match.get('user_drinking') and 
-                current_user_data['user_drinking'] != 'Either'):
-                if current_user_data['user_drinking'] != match['user_drinking']:
-                    is_match = False
-                    # print("No Match Drinking")
+            # # Drinking Preference Check
+            # if (current_user_data.get('user_drinking') and 
+            #     match.get('user_drinking') and 
+            #     current_user_data['user_drinking'] != 'Either'):
+            #     if current_user_data['user_drinking'] != match['user_drinking']:
+            #         is_match = False
+            #         # print("No Match Drinking")
                     
-            # Religion Preference Check
-            if (current_user_data.get('user_religion') and 
-                match.get('user_religion') and 
-                current_user_data['user_religion'] != 'Any'):
-                if current_user_data['user_religion'] != match['user_religion']:
-                    is_match = False
-                    # print("No Match Religion")
+            # # Religion Preference Check
+            # if (current_user_data.get('user_religion') and 
+            #     match.get('user_religion') and 
+            #     current_user_data['user_religion'] != 'Any'):
+            #     if current_user_data['user_religion'] != match['user_religion']:
+            #         is_match = False
+            #         # print("No Match Religion")
                     
             # Kids Preference Check
             if (current_user_data.get('user_prefer_kids') and 
                 match.get('user_kids')):
                 if not check_kids_preference(current_user_data['user_prefer_kids'], match['user_kids']):
                     is_match = False
-                    # print("No Match Kids")
+                    print("No Match Kids")
             
             if is_match:
                 # print("Is match")
@@ -379,11 +379,12 @@ def check_kids_preference(prefer_kids, actual_kids):
     Returns True if it's a match, False otherwise
     """
     try:
-        if prefer_kids == '0' and actual_kids != '0':
-            return False
-        if prefer_kids == '1-2' and int(actual_kids) > 2:
-            return False
-        if prefer_kids == '3+' and int(actual_kids) < 3:
+        if prefer_kids < actual_kids:
+        # if prefer_kids == '0' and actual_kids != '0':
+        #     return False
+        # if prefer_kids == '1-2' and int(actual_kids) > 2:
+        #     return False
+        # if prefer_kids == '3+' and int(actual_kids) < 3:
             return False
         return True
     except ValueError:
@@ -554,8 +555,8 @@ class Match(Resource):
 
                     return final_response
 
-                # Apply extended preference filtering - Off for Live Version
-                # response = get_matches_extended_preferences(current_user_data, response)
+                # Apply extended preference filtering - Only kids enabled for Live Version
+                response = get_matches_extended_preferences(current_user_data, response)
 
                 # print("After matching result: ", result)
 
@@ -567,24 +568,27 @@ class Match(Resource):
                 # Matching 2 way
                 final_result = []
                 print("\n Reverse Match")
-                print("Current User Data: ",current_user_data['user_age'], current_user_data['user_height'], current_user_data['user_identity_plural'])
+                print("Current User Data: ",current_user_data['user_age'], current_user_data['user_height'], current_user_data['user_identity_plural']), current_user_data['user_kids']
                 for user in response:
                     print(user['user_uid'])
-                    print('User Preferences: ', user['user_prefer_age_min'], user['user_prefer_age_max'], user['user_prefer_height_min'], user['user_open_to'])
+                    print('User Preferences: ', user['user_prefer_age_min'], user['user_prefer_age_max'], user['user_prefer_height_min'], user['user_open_to'], user['user_prefer_kids'])
 
                     # Ensure current_user_data fields are not None, null, or empty
                     if not all([
                         user.get('user_prefer_age_min') is not None,
                         user.get('user_prefer_age_max') is not None,
                         user.get('user_prefer_height_min') is not None,
-                        user.get('user_open_to')  # Ensures it's not None or empty
+                        user.get('user_open_to'),  # Ensures it's not None or empty,
+                        user.get('user_prefer_kids') is not None
+                        
                     ]):
                         print(user['user_uid'], " ---------------->>>>>>>   Skipped")
                         continue  # Skip this user if any required field is missing            
 
                     if (user['user_prefer_age_min'] <= current_user_data['user_age'] <= user['user_prefer_age_max']
                         and current_user_data['user_height'] >= user['user_prefer_height_min']
-                        and current_user_data['user_identity_plural'] in ast.literal_eval(user['user_open_to'])):
+                        and current_user_data['user_identity_plural'] in ast.literal_eval(user['user_open_to'])
+                        and current_user_data['user_kids'] <= user['user_prefer_kids']):
                         print("Append User")
                         final_result.append(user)
                         # print(final_result['user_uid'])

@@ -139,7 +139,7 @@ class UserInfo(Resource):
          # --------------- PROCESS IMAGES ------------------
 
         processImage(key, payload)
-        # print("Payload after processImage function: ", payload, type(payload))
+        print("Payload after processImage function: ", payload, type(payload))
         
         # --------------- PROCESS IMAGES ------------------
 
@@ -184,7 +184,12 @@ class UserInfo(Resource):
             print("Checking Inputs: ", key, payload)
             userQuery = db.update('users', key, payload)
         
-        return userQuery
+        # return (userQuery, payload['user_video_url'])
+        return jsonify({
+            "Query": userQuery,
+            "URL": payload['user_video_url']
+        })
+
 
 class AppleLogin(Resource):
     def post(self):

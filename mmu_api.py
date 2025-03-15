@@ -25,7 +25,7 @@ from data import connect, disconnect
 from announcements import Announcements
 from password import Password
 from test_api import test_endpoint_CLASS
-from s3 import uploadImage, s3
+from s3 import uploadImage, s3, S3Video_presigned_url
 
 import os
 import boto3
@@ -292,6 +292,10 @@ def Send_Twilio_SMS(message, phone_number):
     items['code'] = 200
     items['Message'] = 'SMS sent successfully to the recipient'
     return items
+
+
+
+
 
 
 # class Announcements(Resource):
@@ -1170,6 +1174,7 @@ api.add_resource(Messages, "/messages")
 api.add_resource(Announcements, "/announcements", "/announcements/<user_id>")
 api.add_resource(Password, "/resetpassword")
 api.add_resource(endpointTest_CLASS, "/testapi")
+# api.add_resource(S3Video_presigned_url, "/s3")
 # api.add_resource(test_endpoint_CLASS, "/v2/testapi")
 
 if __name__ == '__main__':

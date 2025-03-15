@@ -41,7 +41,6 @@ def deleteImage(key):
             print(f"Error deleting file {key} from bucket {bucket}: {e}")
         return False
 
-
 def upload_multipart(file_content, bucket, key, content_type):
     print("\nIn Upload Multipart:")
     try:
@@ -149,13 +148,60 @@ def uploadImage(file, key, content):
     
     return None
 
+
+# Function to generate a pre-signed URL
+def generate_presigned_url(file_name, file_type):
+    file_key = f"uploads/{uuid.uuid4()}-{file_name}"  # Unique file name
+    presigned_url = s3_client.generate_presigned_url(
+        "put_object",
+        Params={
+            "Bucket": S3_BUCKET,
+            "Key": file_key,
+            "ContentType": file_type
+        },
+        ExpiresIn=3600  # URL expires in 1 hour
+    )
+    return presigned_url, file_key
+
+# Function to store file metadata in MySQL
+def save_file_metadata(file_key, file_type):
+    try:
+        connection = pymysql.connect(host=DB_HOST, user=DB_USER, password=DB_PASSWORD, database=DB_NAME)
+        cursor = connection.cursor()
+
+        sql = "INSERT INTO file_uploads (file_key, file_type) VALUES (%s, %s)"
+        cursor.execute(sql, (file_key, file_type))
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+    except Exception as e:
+        print("Error saving to database:", e)
+
+# Actual API to generate link
+def S3Video_presigned_url():
+    data = request.json
+    file_name = data.get("file_name")
+    file_type = data.get("file_type")
+
+    if not file_name or not file_type:
+        return jsonify({"error": "Missing file_name or file_type"}), 400
+
+    presigned_url, file_key = generate_presigned_url(file_name, file_type)
+    
+    # Optionally store metadata in MySQL
+    save_file_metadata(file_key, file_type)
+
+    return jsonify({"presigned_url": presigned_url, "file_key": file_key})
+
+
 # --------------- PROCESS IMAGES ------------------
 
 def processImage(key, payload):
     print("\nIn Process Image: ", payload)
     # print("Key Passed into processImage: ", key)
     response = {}
-    # bucket = os.getenv('BUCKET_NAME')
+    bucket = os.getenv('BUCKET_NAME')
     # payload_fav_images = None
     with connect() as db:
         
@@ -165,7 +211,7 @@ def processImage(key, payload):
             key_uid = key['user_uid']
             payload_delete_images = payload.pop('user_delete_photo', None)  # Images to Delete
             #  GET images sent by Frontend. (img_0, img_1, ..)
-            if 'img_0' in request.files or 'user_video' in request.files or payload_delete_images != None: 
+            if 'img_0' in request.files or 'user_video' in request.files or payload_delete_images != None or payload['user_video'] != None:
                 # Current Images in the database  
                 payload_query = db.execute(""" SELECT user_photo_url FROM mmu.users WHERE user_uid = \'""" + key_uid + """\'; """)     
                 # print("2: ", payload_query['result'], type(payload_query['result']))
@@ -198,6 +244,40 @@ def processImage(key, payload):
             current_images =ast.literal_eval(payload_images)
             print("---Current images: ", current_images, type(current_images))
         print("processed current images ", current_images)
+
+
+
+
+
+
+        video_processing = payload.pop('user_video', None)
+        print("Video Request: ", video_processing)
+        if video_processing == 'preload':
+        # print("Video Request: ", payload['user_video'])
+            # file_name = payload.pop('user_video_filename', None)
+            # file_type =payload.pop('user_video_filetype', None)
+            # print("Video file info: ", file_name, file_type)
+            # if not file_name or not file_type:
+            #     return jsonify({"error": "Missing file_name or file_type"}), 400
+            
+            unique_filename = f"{key_uid}" + "_" + datetime.datetime.utcnow().strftime('%Y%m%d%H%M%SZ')
+            print("Unique Filename: ", unique_filename)
+            image_key = f'{key_type}/{key_uid}/videos/{unique_filename}'
+            print("Image key: ", image_key)
+            
+
+            presigned_url = s3.generate_presigned_url(
+            "put_object",
+                Params={
+                    "Bucket": bucket,
+                    "Key": unique_filename,
+                    "ContentType": 'video/mp4'
+                },
+                ExpiresIn=3600  # URL expires in 1 hour
+            )
+            print("Presigned URL: ", presigned_url)
+            payload['user_video_url'] = presigned_url
+
 
         video_file = request.files.get('user_video')
 
@@ -248,6 +328,8 @@ def processImage(key, payload):
                 delete_video = video_query['result'][0]['user_video_url']
                 unique_filename = f"{key_uid}" + "_" + datetime.datetime.utcnow().strftime('%Y%m%d%H%M%SZ')
                 image_key = f'{key_type}/{key_uid}/videos/{unique_filename}'
+
+
 
                 video = uploadImage(video_file, image_key, '')
                 payload['user_video_url'] = json.dumps(video)
