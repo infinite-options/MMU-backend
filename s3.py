@@ -13,13 +13,98 @@ from werkzeug.datastructures import FileStorage
 import mimetypes
 import ast
 from data import connect, disconnect
+from flask_restful import Resource
 
+bucket = os.getenv('BUCKET_NAME')
 s3 = boto3.client(
     's3',
     aws_access_key_id=os.getenv('S3_KEY'),
     aws_secret_access_key=os.getenv('S3_SECRET'),
     region_name=os.getenv('S3_REGION')
 )
+
+
+# # Function to generate a pre-signed URL
+# def generate_presigned_url(file_name, file_type):
+#     file_key = f"uploads/{uuid.uuid4()}-{file_name}"  # Unique file name
+#     presigned_url = s3_client.generate_presigned_url(
+#         "put_object",
+#         Params={
+#             "Bucket": S3_BUCKET,
+#             "Key": file_key,
+#             "ContentType": file_type
+#         },
+#         ExpiresIn=3600  # URL expires in 1 hour
+#     )
+#     return presigned_url, file_key
+
+# # Function to store file metadata in MySQL
+# def save_file_metadata(file_key, file_type):
+#     try:
+#         connection = pymysql.connect(host=DB_HOST, user=DB_USER, password=DB_PASSWORD, database=DB_NAME)
+#         cursor = connection.cursor()
+
+#         sql = "INSERT INTO file_uploads (file_key, file_type) VALUES (%s, %s)"
+#         cursor.execute(sql, (file_key, file_type))
+#         connection.commit()
+
+#         cursor.close()
+#         connection.close()
+#     except Exception as e:
+#         print("Error saving to database:", e)
+
+# # Actual API to generate link
+# def S3Video_presigned_url():
+#     data = request.json
+#     file_name = data.get("file_name")
+#     file_type = data.get("file_type")
+
+#     if not file_name or not file_type:
+#         return jsonify({"error": "Missing file_name or file_type"}), 400
+
+#     presigned_url, file_key = generate_presigned_url(file_name, file_type)
+    
+#     # Optionally store metadata in MySQL
+#     save_file_metadata(file_key, file_type)
+
+#     return jsonify({"presigned_url": presigned_url, "file_key": file_key})
+
+# Alternative API to generate link (Much better - eliminates need for File Name)
+
+class Get_presigned_url(Resource):
+    def post(self):    
+    # def get_presigned_url():
+        data = request.json
+        key_uid = data.get("user_uid")
+        file_type = data.get("user_video_filetype")
+        print("S3 Link Inputs: ", key_uid, file_type)
+
+        if not file_type:
+            return jsonify({"error": "Missing file_type"}), 400
+
+        # Generate a unique filename
+        # file_key = f"videos/{uuid.uuid4()}.mp4"
+        key_type = 'users'
+        unique_filename = f"{key_uid}" + "_" + datetime.datetime.utcnow().strftime('%Y%m%d%H%M%SZ')
+        image_key = f'{key_type}/{key_uid}/videos/{unique_filename}'
+        print("File Name: ", unique_filename, image_key)
+
+
+        # Create the pre-signed URL
+        presigned_url = s3.generate_presigned_url(
+            "put_object",
+            Params={
+                "Bucket":bucket,
+                # "Key": file_key,
+                "Key": unique_filename,
+                "ContentType": file_type
+            },
+            ExpiresIn=3600  # URL expires in 1 hour
+        )
+        print("presigned URL: ", presigned_url)
+
+        # return jsonify({"presigned_url": presigned_url, "file_key": file_key})
+        return jsonify({"presigned_url": presigned_url, "file_key": unique_filename})
 
 
 def deleteImage(key):
@@ -100,7 +185,7 @@ def uploadImage(file, key, content):
     # print("File: ", file)
     # print("Key: ", key)
     # print("Content: ", content)
-    bucket = 'io-mmu'
+    # bucket = 'io-mmu'
 
     if isinstance(file, FileStorage): 
         print("In Upload Image isInstance File Storage: ", FileStorage)
