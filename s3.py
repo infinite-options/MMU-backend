@@ -142,7 +142,7 @@ class Get_presigned_url(Resource):
         video_url = presigned_url.split('?')[0]
 
         # return jsonify({"presigned_url": presigned_url, "file_key": file_key})
-        return jsonify({"url": presigned_url, "key": unique_filename, "video_url": video_url})
+        return jsonify({"url": presigned_url, "key": unique_filename, "videoUrl": video_url})
 
 
 def deleteImage(key):
