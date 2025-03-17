@@ -1,5 +1,6 @@
 from flask import request, make_response, jsonify
 
+import requests
 import os
 import pymysql
 import datetime
@@ -23,6 +24,40 @@ s3 = boto3.client(
     region_name=os.getenv('S3_REGION')
 )
 
+
+# For Testing Purposes only - Not used in the program
+class Upload_Video(Resource):
+    def post(self):
+        # Get the presigned URL from form data
+        presigned_url = request.form.get('presigned_url')
+        video_file = request.files['user_video']
+
+        print(presigned_url)
+        print(video_file)
+        
+        # Save the file temporarily
+        video_file_path = "/tmp/uploaded_video.mp4"
+        video_file.save(video_file_path)
+        
+        # Upload the video using the presigned URL
+        with open(video_file_path, 'rb') as file:
+            # Send a PUT request to the presigned URL with the file data
+            response = requests.put(  # Use requests.put instead of request.put
+                presigned_url,
+                data=file,
+                headers={'Content-Type': 'video/mp4'}
+            )
+        
+        # Check if the upload was successful
+        if response.status_code in [200, 201, 204]:
+            print(f"Video uploaded successfully. Status code: {response.status_code}")
+            return {"status": "success", "code": response.status_code}, 200
+        else:
+            print(f"Upload failed. Status code: {response.status_code}")
+            print(f"Response: {response.text}")
+            return {"status": "failed", "code": response.status_code, "message": response.text}, 500
+
+    
 
 # # Function to generate a pre-signed URL
 # def generate_presigned_url(file_name, file_type):
@@ -96,15 +131,18 @@ class Get_presigned_url(Resource):
             Params={
                 "Bucket":bucket,
                 # "Key": file_key,
-                "Key": unique_filename,
-                "ContentType": file_type
+                "Key": f"users/{key_uid}/videos/{unique_filename}",
+                "ContentType": file_type,
+                "ACL": "public-read"
             },
             ExpiresIn=3600  # URL expires in 1 hour
         )
         print("presigned URL: ", presigned_url)
 
+        video_url = presigned_url.split('?')[0]
+
         # return jsonify({"presigned_url": presigned_url, "file_key": file_key})
-        return jsonify({"presigned_url": presigned_url, "file_key": unique_filename})
+        return jsonify({"url": presigned_url, "key": unique_filename, "video_url": video_url})
 
 
 def deleteImage(key):

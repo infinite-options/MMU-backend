@@ -25,7 +25,7 @@ from data import connect, disconnect
 from announcements import Announcements
 from password import Password
 from test_api import test_endpoint_CLASS
-from s3 import uploadImage, s3, Get_presigned_url
+from s3 import uploadImage, s3, Get_presigned_url, Upload_Video
 
 import os
 import boto3
@@ -1171,6 +1171,7 @@ api.add_resource(Announcements, "/announcements", "/announcements/<user_id>")
 api.add_resource(Password, "/resetpassword")
 api.add_resource(endpointTest_CLASS, "/testapi")
 api.add_resource(Get_presigned_url, '/s3Link')
+api.add_resource(Upload_Video, '/uploadVideo')
 # api.add_resource(test_endpoint_CLASS, "/v2/testapi")
 
 if __name__ == '__main__':
