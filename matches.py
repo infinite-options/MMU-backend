@@ -159,10 +159,10 @@ def get_matches_height(current_user_data, matches):
             
             # Check if user has entered height:
             if match['user_height'] and int(match['user_height']) >= int(current_user_min_height_preference):
-                # print("Height Matched ", match['user_height'], int(current_user_min_height_preference))
+                print("Height Matched ", match['user_height'], int(current_user_min_height_preference))
                 result.append(match)
             else:
-                # print(" ---------------->>>>>>>   No Match!")
+                print(" ---------------->>>>>>>   No Match!")
                 continue
 
         # print([user['user_uid'] for user in result])
@@ -210,6 +210,39 @@ def get_matches_age(current_user_data, matches):
     except Exception as e:
         return jsonify({
             "message": "Error in Get Matches height"
+        })
+
+
+def get_matches_kids(current_user_data, matches):
+    print("\n\n\t in kids \n")
+    try:
+        current_user_kids_preference = int(current_user_data['user_prefer_kids'])
+
+        print(f"Current User Preferences:\n"
+        f"- Max Kids Preference: {current_user_kids_preference} (type: {type(current_user_kids_preference).__name__})\n")
+
+        result = []
+
+        for match in matches:
+            # print(match['user_uid'])
+            
+            # Check if user has entered height:
+            if match['user_kids'] and int(match['user_kids']) <= int(current_user_kids_preference):
+                print("Kids Matched ", match['user_height'], int(current_user_kids_preference))
+                result.append(match)
+            else:
+                print(" ---------------->>>>>>>   No Match!")
+                continue
+
+        # print([user['user_uid'] for user in result])
+        print(len(result))
+        # return result
+        # print(len(result)) 
+        return result
+
+    except Exception as e:
+        return jsonify({
+            "message": "Error in Get Matches kids"
         })
 
 
@@ -524,6 +557,14 @@ class Match(Resource):
                     response = get_matches_age(current_user_data, response)
 
                     print("Back in main function 4: ", len(response))
+                    # print(response)
+
+                # Kids
+                print("In Kids")
+                if current_user_data['user_prefer_kids'] not in (None, ""):
+                    response = get_matches_kids(current_user_data, response)
+
+                    print("Back in main function 5: ", len(response))
                     # print(response)
 
 
