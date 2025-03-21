@@ -25,7 +25,7 @@ s3 = boto3.client(
 )
 
 
-# For Testing Purposes only - Not used in the program
+# For Testing Purposes only - Not used in the program - Use this to apply S3Link and upload video to AWS S3
 class Upload_Video(Resource):
     def post(self):
         # Get the presigned URL from form data
@@ -287,8 +287,10 @@ def processImage(key, payload):
             key_type = 'users'
             key_uid = key['user_uid']
             payload_delete_images = payload.pop('user_delete_photo', None)  # Images to Delete
+            payload_delete_video = payload.pop('user_delete_video', None)  # Video to Delete
+            print("Video to delete: ", payload_delete_video)
             #  GET images sent by Frontend. (img_0, img_1, ..)
-            if 'img_0' in request.files or 'user_video' in request.files or payload_delete_images != None: 
+            if 'img_0' in request.files or 'user_video' in request.files or payload_delete_images != None or payload_delete_video != None: 
                 # Current Images in the database  
                 payload_query = db.execute(""" SELECT user_photo_url FROM mmu.users WHERE user_uid = \'""" + key_uid + """\'; """)     
                 # print("2: ", payload_query['result'], type(payload_query['result']))
@@ -323,6 +325,7 @@ def processImage(key, payload):
         print("processed current images ", current_images)
 
         video_file = request.files.get('user_video')
+        print("Video File: ", video_file)
 
         # Check if images are being added OR deleted
         images = []
@@ -369,6 +372,7 @@ def processImage(key, payload):
                 print("\n\nIn 'if video' Statement")
                 video_query = db.execute(""" SELECT user_video_url FROM mmu.users WHERE user_uid = \'""" + key_uid + """\'; """)
                 delete_video = video_query['result'][0]['user_video_url']
+                print("Video to delete: ", delete_video)
                 unique_filename = f"{key_uid}" + "_" + datetime.datetime.utcnow().strftime('%Y%m%d%H%M%SZ')
                 image_key = f'{key_type}/{key_uid}/videos/{unique_filename}'
 
@@ -422,6 +426,32 @@ def processImage(key, payload):
                 except: 
                     print("could not delete from S3")
             print("processed DELETED Images")
+
+        if payload_delete_video:
+            print("\nAbout to process DELETED video in database;")
+            print("In video delete: ", payload_delete_video, type( payload_delete_video))
+            delete_video = ast.literal_eval(payload_delete_video)
+            print("After ast: ", delete_video, type(delete_video), len(delete_video))
+            for video in delete_video:
+                print("Video to Delete: ", video, type(video))
+                # print("Payload Image:", current_images, type(current_images))
+                # print("Current images before deletion:", [doc['link'] for doc in current_images])
+
+                # Delete from db list assuming it is in db list
+                # try:
+                #     current_images.remove(video)   # Works becuase this is an Exact match
+                # except:
+                #     print("Image not in list")
+
+                #  Delete from S3 Bucket
+                try:
+                    delete_key = video.split('io-mmu.s3.amazonaws.com/', 1)[1]
+                    print("Delete key", delete_key)
+                    deleteImage(delete_key)
+                except: 
+                    print("could not delete from S3")
+            print("processed DELETED Images")
+
 
         print("\n\nCurrent Images in Function: ", current_images, type(current_images))
 
