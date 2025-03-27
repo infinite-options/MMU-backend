@@ -12,7 +12,7 @@ class Likes(Resource):
         response = {}
         response['code'] = 200
         response['message'] = "Successfully executed SQL query"
-        response['result'] = []
+        # response['result'] = []
         
         with connect() as db:
 
@@ -34,35 +34,66 @@ class Likes(Resource):
 
                 # Matched Results
                 likeQuery = f'''
-                                SELECT *
-                                FROM (
-                                    SELECT l1.like_uid, 
-                                        u.user_uid, 
-                                        u.user_email_id, 
-                                        u.user_first_name, 
-                                        u.user_last_name, 
-                                        u.user_age, 
-                                        u.user_gender,
-                                        u.user_photo_url
-                                    FROM mmu.likes l1
-                                    LEFT JOIN mmu.users u ON l1.liked_user_id = u.user_uid
-                                    -- WHERE l1.liker_user_id = "100-000307" 
-                                    WHERE l1.liker_user_id = "{user_id}"
-                                    AND EXISTS (
-                                        SELECT 1
-                                        FROM mmu.likes l2
-                                        WHERE l2.liker_user_id = l1.liked_user_id
-                                        AND l2.liked_user_id = l1.liker_user_id
-                                    )
-                                ) AS matches  -- Subquery alias placement fixed
-                                LEFT JOIN mmu.meet m1 
-                                    ON matches.user_uid = m1.meet_date_user_id 
-                                    -- AND m1.meet_user_id = "100-000307"
-                                    AND m1.meet_user_id = "{user_id}"
-                                LEFT JOIN mmu.meet m2 
-                                    ON matches.user_uid = m2.meet_user_id 
-                                    -- AND m2.meet_date_user_id = "100-000307"
-                                    AND m2.meet_date_user_id = "{user_id}"
+                        SELECT 
+                            matches.like_uid, 
+                            matches.user_uid, 
+                            matches.user_email_id, 
+                            matches.user_first_name, 
+                            matches.user_last_name, 
+                            matches.user_age, 
+                            matches.user_gender,
+                            matches.user_photo_url,
+                            
+                            -- Combine meet columns
+                            COALESCE(m1.meet_uid, m2.meet_uid) AS meet_uid,
+                            COALESCE(m1.meet_user_id, m2.meet_user_id) AS meet_user_id,
+                            COALESCE(m1.meet_date_user_id, m2.meet_date_user_id) AS meet_date_user_id,
+                            COALESCE(m1.meet_day, m2.meet_day) AS meet_day,
+                            COALESCE(m1.meet_time, m2.meet_time) AS meet_time,
+                            COALESCE(m1.meet_date_type, m2.meet_date_type) AS meet_date_type,
+                            COALESCE(m1.meet_location, m2.meet_location) AS meet_location,
+                            COALESCE(m1.meet_latitude, m2.meet_latitude) AS meet_latitude,
+                            COALESCE(m1.meet_longitude, m2.meet_longitude) AS meet_longitude,
+                            COALESCE(m1.meet_confirmed, m2.meet_confirmed) AS meet_confirmed,
+                            COALESCE(m1.meet_user_arrived, m2.meet_user_arrived) AS meet_user_arrived,
+                            COALESCE(m1.meet_user_date_arrived, m2.meet_user_date_arrived) AS meet_user_date_arrived,
+                            COALESCE(m1.meet_completed, m2.meet_completed) AS meet_completed
+
+                        FROM (
+                            -- Find mutual likes
+                            SELECT 
+                                l1.like_uid, 
+                                u.user_uid, 
+                                u.user_email_id, 
+                                u.user_first_name, 
+                                u.user_last_name, 
+                                u.user_age, 
+                                u.user_gender,
+                                u.user_photo_url
+                            FROM mmu.likes l1
+                            LEFT JOIN mmu.users u ON l1.liked_user_id = u.user_uid
+                            WHERE l1.liker_user_id = "100-000002" 
+                            -- WHERE l1.liker_user_id = "{user_id}"
+                            AND EXISTS (
+                                SELECT 1
+                                FROM mmu.likes l2
+                                WHERE l2.liker_user_id = l1.liked_user_id
+                                AND l2.liked_user_id = l1.liker_user_id
+                            )
+                        ) AS matches  
+
+                        -- Match meet data when the current user is the "meet_user_id"
+                        LEFT JOIN mmu.meet m1 
+                            ON matches.user_uid = m1.meet_date_user_id 
+                            AND m1.meet_user_id = "100-000002"
+                            -- AND m1.meet_user_id = "{user_id}"
+                            
+
+                        -- Match meet data when the current user is the "meet_date_user_id"
+                        LEFT JOIN mmu.meet m2 
+                            ON matches.user_uid = m2.meet_user_id 
+                            AND m2.meet_date_user_id = "100-000002";
+                            -- AND m2.meet_date_user_id = "{user_id}";
                                 '''
                 result = db.execute(likeQuery)
                 response['matched_results'] = result['result']
