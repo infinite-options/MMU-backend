@@ -66,7 +66,7 @@ class Likes(Resource):
                                 '''
                 result = db.execute(likeQuery)
                 response['matched_results'] = result['result']
-                response['result'].extend([{'matched_results': result['result']}])
+                # response['result'].extend([{'matched_results': result['result']}])
 
 
                 # People who I like (People whom you selected)
@@ -100,7 +100,7 @@ class Likes(Resource):
                                 );'''
                 result = db.execute(likeQuery)
                 response['people_whom_you_selected'] = result['result']
-                response['result'].extend([{'people_whom_you_selected': result['result']}])
+                # response['result'].extend([{'people_whom_you_selected': result['result']}])
 
                 # People who like me (People who selected you)
                 # likeQuery = f'''
@@ -134,7 +134,7 @@ class Likes(Resource):
                                 );'''
                 result = db.execute(likeQuery)
                 response['people_who_selected_you'] = result['result']
-                response['result'].extend([{'people_who_selected_you': result['result']}])
+                # response['result'].extend([{'people_who_selected_you': result['result']}])
 
             except Exception as e:
                 return make_response(jsonify({
