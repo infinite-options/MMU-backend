@@ -72,8 +72,8 @@ class Likes(Resource):
                                 u.user_photo_url
                             FROM mmu.likes l1
                             LEFT JOIN mmu.users u ON l1.liked_user_id = u.user_uid
-                            WHERE l1.liker_user_id = "100-000002" 
-                            -- WHERE l1.liker_user_id = "{user_id}"
+                            -- WHERE l1.liker_user_id = "100-000002" 
+                            WHERE l1.liker_user_id = "{user_id}"
                             AND EXISTS (
                                 SELECT 1
                                 FROM mmu.likes l2
@@ -85,15 +85,15 @@ class Likes(Resource):
                         -- Match meet data when the current user is the "meet_user_id"
                         LEFT JOIN mmu.meet m1 
                             ON matches.user_uid = m1.meet_date_user_id 
-                            AND m1.meet_user_id = "100-000002"
-                            -- AND m1.meet_user_id = "{user_id}"
+                            -- AND m1.meet_user_id = "100-000002"
+                            AND m1.meet_user_id = "{user_id}"
                             
 
                         -- Match meet data when the current user is the "meet_date_user_id"
                         LEFT JOIN mmu.meet m2 
                             ON matches.user_uid = m2.meet_user_id 
-                            AND m2.meet_date_user_id = "100-000002";
-                            -- AND m2.meet_date_user_id = "{user_id}";
+                            -- AND m2.meet_date_user_id = "100-000002";
+                            AND m2.meet_date_user_id = "{user_id}";
                                 '''
                 result = db.execute(likeQuery)
                 response['matched_results'] = result['result']
